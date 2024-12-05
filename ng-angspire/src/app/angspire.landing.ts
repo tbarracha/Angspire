@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Theme, ThemeService } from './core/services/theme-service/theme.service';
+import { Theme, ThemeService } from './core/services/theme.service';
 import { CommonModule } from '@angular/common';
 
 @Component({

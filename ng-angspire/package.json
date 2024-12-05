@@ -21,6 +21,7 @@
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
     "fs": "^0.0.1-security",
+    "jwt-decode": "^4.0.0",
     "path": "^0.12.7",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\AngspireDotNetAPI.Web.props" />
+</Project>
