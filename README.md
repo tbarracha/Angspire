@@ -1,8 +1,8 @@
-# Angspire - Angular Frontend & Aspire Dot Net Backend
 <div align="center">
   <img src="https://github.com/user-attachments/assets/7845aef3-3c6d-4f82-adc9-c5b14bc2a096" alt="Angspire Logo" width="96">
 </div>
 
+# Angspire - Angular Frontend & Aspire Dot Net Backend
 **Angspire** is a prebuilt Angular + .NET (monorepo) project template designed to simplify development with out-of-the-box features like (simple) user authentication and frontend themes, reducing setup time and providing a scalable, maintainable foundation for your applications.
 
 **NOTE:**
