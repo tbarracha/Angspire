@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "ng": "ng",
-    "start": "run-script-os",
+    "start": "ng serve",
     "start:win32": "ng serve --port %PORT%",
     "start:default": "ng serve --port $PORT",
     "build": "ng build",
