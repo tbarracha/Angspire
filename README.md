@@ -36,7 +36,7 @@
 ---
 
 # Theme-sync
-This project comes with a "theme-sync.js" script which allows you to sync style variables through node commands.
+This project comes with a `theme-sync.js` script which allows you to sync style variables through node commands.
 
 **How to use theme-sync.js:**
 1. creates variables in "styles.scss"
