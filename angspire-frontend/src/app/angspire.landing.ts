@@ -1,7 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { Theme, ThemeService } from './core/services/theme.service';
 import { CommonModule } from '@angular/common';
-import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControlOptions, ValidatorFn } from '@angular/forms';
 import { AuthResponseModel } from './core/authentication/models/auth-response-model';
 import { AuthRegisterModel } from './core/authentication/models/auth-register-model';
 import { AuthLoginModel } from './core/authentication/models/auth-login-model';
@@ -131,7 +131,7 @@ import { AuthService } from './core/authentication/services/auth.service';
             type="email"
             id="email"
             formControlName="email"
-            class="w-full max-w-md p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+            class="w-full max-w-md p-3 rounded-md border border-primary text-text placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition duration-200"
             placeholder="Email"
           />
           <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="text-red-500 text-sm">
@@ -146,7 +146,7 @@ import { AuthService } from './core/authentication/services/auth.service';
             type="password"
             id="password"
             formControlName="password"
-            class="w-full max-w-md p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+            class="w-full max-w-md p-3 rounded-md border border-primary text-text placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition duration-200"
             placeholder="Password"
           />
           <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500 text-sm">
@@ -161,7 +161,7 @@ import { AuthService } from './core/authentication/services/auth.service';
             type="password"
             id="confirm-password"
             formControlName="confirmPassword"
-            class="w-full max-w-md p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+            class="w-full max-w-md p-3 rounded-md border border-primary text-text placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition duration-200"
             placeholder="Confirm Password"
           />
           <div *ngIf="registerForm.hasError('mismatch') && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-sm">
@@ -354,23 +354,28 @@ export class AngspireHome {
   // ----------------------------------------------
 
   private createLoginForm(): FormGroup {
-    return this.fb.group({
+    const controls = {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
-    });
+    };
+  
+    return this.fb.group(controls);
   }
-
+  
   private createRegisterForm(): FormGroup {
-    return this.fb.group(
-      {
-        name: [''], // Remove Validators.required
-        email: ['', [Validators.required, Validators.email]],
-        password: ['', Validators.required],
-        confirmPassword: ['', Validators.required],
-        lastName: [''], // Optional
-      },
-      { validator: this.passwordMatchValidator }
-    );
+    const controls = {
+      name: [''],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required],
+      confirmPassword: ['', Validators.required],
+      lastName: [''],
+    };
+  
+    const options: AbstractControlOptions = {
+      validators: this.passwordMatchValidator as ValidatorFn,
+    };
+  
+    return this.fb.group(controls, options);
   }
 
   // ----------------------------------------------

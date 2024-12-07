@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // to create theme colors, run: npm run theme-sync
+        // to create theme colors, run: node theme-sync update
 
         // Theme START
         'header': 'var(--header)',

@@ -5,6 +5,8 @@
 // and themes.json
 // ----------------------------------------
 
+// node theme-sync update
+
 const fs = require('fs');
 const path = require('path');
 
@@ -251,7 +253,7 @@ function clearThemes() {
 // Parse Command-Line Arguments
 const command = process.argv[2];
 switch (command) {
-  case 'sync':
+  case 'update':
     syncTheme();
     break;
   case 'clear':
