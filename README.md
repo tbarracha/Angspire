@@ -30,9 +30,28 @@
 </table>
 
 ---
+## Theme-sync
+This project comes with a "theme-sync.js" script which allows you to sync style variables.
+
+**How to use theme-sync.js:**
+1. creates variables in "styles.scss"
+2. run: `node theme-sync update`
+3. "themes.json" & "tailwind.config.js" will update
+
+**Commands:**
+- update: `node theme-sync update`
+- clear: `node theme-sync clear`
+
+**NOTE:**
+- if you have more than one theme in the "themes.json" file and they are missing the new css variables, they will be created with the same value as the css variables
+
+https://github.com/user-attachments/assets/843da791-19e4-4ac7-8eca-7ed4a4caa987
+
+---
 
 [Changelog](https://github.com/tbarracha/Angspire/blob/main/CHANGELOG.md)
 
 ## Todo
+- [ ] Sync themes from theme.json to styles.scss
 - [ ] Theme Designer
 - [ ] Open Swagger on project run
