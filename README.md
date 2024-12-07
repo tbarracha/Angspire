@@ -5,12 +5,16 @@
 # Angspire - Angular Frontend & Aspire Dot Net Backend
 **Angspire** is an Angular + .NET (monorepo) project template designed to simplify development with out-of-the-box features like (basic) user authentication and frontend themes, reducing setup time and providing a scalable, maintainable foundation for your applications.
 
+**IMPORTANT:**
+- Running the dot net project, will also serve the angular project
+
 **NOTE:**
-- **Tech:** Angular 19, Dot Net 9.0 & Aspire 9.0
+- **Tech:** _Angular 19, Dot Net 9.0 & Aspire 9.0_
 - **Authentication:** _AspNetCore Identity for EntityFrameworkCore_
 - **Database:** _PostgresSQL_
 
-<table>
+
+<table align="center">
   <tr>
     <th>Angular Page</th>
     <th>API on Swagger</th>
@@ -30,8 +34,9 @@
 </table>
 
 ---
-## Theme-sync
-This project comes with a "theme-sync.js" script which allows you to sync style variables.
+
+# Theme-sync
+This project comes with a "theme-sync.js" script which allows you to sync style variables through node commands.
 
 **How to use theme-sync.js:**
 1. creates variables in "styles.scss"
