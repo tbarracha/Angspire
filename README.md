@@ -10,7 +10,6 @@
 - **Authentication:** _AspNetCore Identity for EntityFrameworkCore_
 - **Database:** _PostgresSQL_
 
-
 <table>
   <tr>
     <th>Angular Page</th>
@@ -31,6 +30,8 @@
 </table>
 
 ---
+
+[Changelog](https://github.com/tbarracha/Angspire/blob/main/CHANGELOG.md)
 
 ## Todo
 - [ ] Theme Designer
