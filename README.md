@@ -3,7 +3,7 @@
 </div>
 
 # Angspire - Angular Frontend & Aspire Dot Net Backend
-**Angspire** is a prebuilt Angular + .NET (monorepo) project template designed to simplify development with out-of-the-box features like (basic) user authentication and frontend themes, reducing setup time and providing a scalable, maintainable foundation for your applications.
+**Angspire** is an Angular + .NET (monorepo) project template designed to simplify development with out-of-the-box features like (basic) user authentication and frontend themes, reducing setup time and providing a scalable, maintainable foundation for your applications.
 
 **NOTE:**
 - **Tech:** Angular 19, Dot Net 9.0 & Aspire 9.0
