@@ -2,7 +2,7 @@
 # Angspire Change Log
 All notable changes to the **Angspire** project will be documented in this file.
 
-## [Release] - 2024 Dec 7
+## [v0.0.1] - 2024 Dec 7
 
 ### Added:
 - Angular landing page sections:
