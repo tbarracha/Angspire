@@ -407,7 +407,7 @@ export class AngspireHome {
   // ----------------------------------------------
 
   applyTheme(themeName: string): void {
-    this.themeService.applyThemeByName(themeName);
+    this.themeService.applyThemeSmoothByName(themeName);
   }
 
   // ----------------------------------------------

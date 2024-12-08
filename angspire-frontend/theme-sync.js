@@ -16,17 +16,15 @@ function toCamelCase(str) {
 }
 
 // File paths
-// File paths
 console.log("\nDIR:", __dirname, "\n\n");
-const cssFilePath = path.resolve(__dirname, 'src/styles.scss'); // Correct relative path
-const tailwindConfigPath = path.resolve(__dirname, 'tailwind.config.js'); // Correct relative path
-const themesJsonPath = path.resolve(__dirname, 'public/themes.json'); // Correct relative path
+const cssFilePath = path.resolve(__dirname, 'src/styles.scss');
+const tailwindConfigPath = path.resolve(__dirname, 'tailwind.config.js');
+const themesJsonPath = path.resolve(__dirname, 'public/themes.json');
 
 // Function to extract variables from the specific section in CSS :root
 function extractVariablesFromCSS(cssFile) {
   const content = fs.readFileSync(cssFile, 'utf-8');
 
-  // Match the :root section with Theme markers
   const rootMatch = content.match(/:root\s*{([\s\S]*?\/\* Theme START \*\/([\s\S]*?)\/\* Theme END \*\/[\s\S]*?)}/);
 
   if (!rootMatch) {
@@ -36,9 +34,9 @@ function extractVariablesFromCSS(cssFile) {
 
   // Extract variables between Theme START and Theme END
   const themeSection = rootMatch[2]
-    .split(';') // Split each line
-    .map((line) => line.trim()) // Trim spaces
-    .filter((line) => line.startsWith('--')) // Keep only variables
+    .split(';')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('--'))
     .reduce((acc, line) => {
       const [key, value] = line.split(':').map((part) => part.trim());
       acc[key.replace('--', '')] = value;
@@ -54,7 +52,6 @@ function extractVariablesFromCSS(cssFile) {
 
 // Function to update colors section between comments in Tailwind config
 function updateTailwindColors(variables, configPath) {
-  // Read the Tailwind config as plain text
   let configContent = fs.readFileSync(configPath, 'utf-8');
 
   // Locate the section between the comments
