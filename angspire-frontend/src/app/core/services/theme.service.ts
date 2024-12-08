@@ -26,7 +26,7 @@ export class ThemeService {
       (themes) => {
         this.themes = themes;
         if (!this.currentTheme && themes.length > 0) {
-          this.applyThemeByName(themes[0].name); // Apply the first theme by name
+          this.applyThemeByName(themes[0].name); // Apply the first theme
         }
         console.log('[ThemeService] Themes loaded:', this.themes);
       },
@@ -65,11 +65,6 @@ export class ThemeService {
       return;
     }
 
-    if (!duration || duration === 0) {
-      this.applyTheme(theme);
-      return;
-    }
-
     this.applyThemeSmooth(theme, duration);
   }
 
@@ -90,6 +85,14 @@ export class ThemeService {
       if (key !== 'name') {
         const cssVariable = `--${this.camelToKebab(key)}`;
         const targetColor = theme[key];
+        const currentColor = this.getCssVariable(cssVariable);
+
+        // Skip applying the value if it's already the same
+        if (currentColor === targetColor) {
+          console.log(`[ThemeService] Skipping unchanged variable: ${cssVariable}`);
+          return;
+        }
+
         this.setCssVariable(cssVariable, targetColor);
       }
     });
@@ -102,6 +105,13 @@ export class ThemeService {
       if (key !== 'name') {
         const cssVariable = `--${this.camelToKebab(key)}`;
         const targetColor = theme[key];
+        const currentColor = this.getCssVariable(cssVariable);
+
+        // Skip interpolation if the target is already the same
+        if (currentColor === targetColor) {
+          console.log(`[ThemeService] Skipping unchanged variable for smooth transition: ${cssVariable}`);
+          return;
+        }
 
         if (this.activeIntervals.has(cssVariable)) {
           clearInterval(this.activeIntervals.get(cssVariable)!);
@@ -127,9 +137,9 @@ export class ThemeService {
   private getCssVariable(cssVariable: string): string {
     let value = getComputedStyle(this.root).getPropertyValue(cssVariable).trim();
     if (value.startsWith('#')) {
-      value = this.hexToRgbString(value); // Convert hex to RGB string
+      value = this.hexToRgbString(value);
     } else if (!value.startsWith('rgb')) {
-      value = 'rgb(0, 0, 0)'; // Default to black if undefined
+      value = 'rgb(0, 0, 0)';
     }
     return value;
   }
@@ -183,7 +193,7 @@ export class ThemeService {
     if (match) {
       return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
     }
-    return [0, 0, 0]; // Default to black
+    return [0, 0, 0];
   }
 
   private camelToKebab(str: string): string {
