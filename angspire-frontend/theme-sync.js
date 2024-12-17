@@ -1,7 +1,6 @@
 // ----------------------------------------
 // theme-sync.js
-// Syncs theme colors and selectors
-// between styles.scss, tailwind.config.js, and themes.json
+// Syncs theme colors between styles.scss, tailwind.config.js, and themes.json
 // ----------------------------------------
 
 // Run with: node theme-sync update
@@ -40,7 +39,7 @@ function extractVariablesFromCSS(cssFile) {
     }, {});
 }
 
-// Update Tailwind config with colors and themes
+// Update Tailwind config with colors only
 function updateTailwindConfig(variables, configPath) {
   let configContent = fs.readFileSync(configPath, 'utf-8');
 
@@ -57,28 +56,18 @@ function updateTailwindConfig(variables, configPath) {
   const beforeSection = configContent.slice(0, startIndex + startMarker.length);
   const afterSection = configContent.slice(endIndex);
 
-  const themes = JSON.parse(fs.readFileSync(themesJsonPath, 'utf-8'));
-
-  // Generate colors section
+  // Generate colors section only
   const updatedColors = Object.keys(variables)
-    .map((key) => `          '${key}': 'var(--${key})',`)
+    .map((key) => `        '${key}': 'var(--${key})',`)
     .join('\n');
 
-  // Generate theme-specific selectors
-  const themeSelectors = themes
-    .map((theme) => `      ${theme.name.toLowerCase()}: '[data-theme="${theme.name.toLowerCase()}"]'`)
-    .join(',\n');
-
-  const newConfigSection = `
-${updatedColors}
-        `,
-    themeSection = `\n    themes: {\n${themeSelectors}\n    },`;
+  const newConfigSection = `\n${updatedColors}\n`;
 
   // Inject updated content into Tailwind config
-  configContent = `${beforeSection}${newConfigSection}${themeSection}${afterSection}`;
+  configContent = `${beforeSection}${newConfigSection}${afterSection}`;
   fs.writeFileSync(configPath, configContent, 'utf-8');
 
-  console.log('Updated Tailwind config with theme colors and selectors.');
+  console.log('Updated Tailwind config with theme colors.');
 }
 
 // Update themes.json with missing variables
