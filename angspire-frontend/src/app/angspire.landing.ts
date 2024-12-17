@@ -345,7 +345,6 @@ export class AngspireHome {
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.availableThemes = this.themeService.getAllThemes();
-      this.applyTheme(this.availableThemes[0].name);
     }, 100);
   }
 
