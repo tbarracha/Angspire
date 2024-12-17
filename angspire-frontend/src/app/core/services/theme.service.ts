@@ -148,26 +148,34 @@ export class ThemeService {
     const currentColor = this.getCssVariable(cssVariable);
     const [r1, g1, b1] = this.parseRgb(currentColor);
     const [r2, g2, b2] = this.hexToRgb(targetColor);
-
-    const steps = Math.round(duration / 16); // Approximate 60 FPS
-    let currentStep = 0;
-
-    const interval = setInterval(() => {
-      const t = currentStep / steps;
-      const r = Math.round(this.lerp(r1, r2, t));
-      const g = Math.round(this.lerp(g1, g2, t));
-      const b = Math.round(this.lerp(b1, b2, t));
-
+  
+    let startTime: number | null = null;
+  
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1); // Normalize progress to [0, 1]
+  
+      const r = Math.round(this.lerp(r1, r2, progress));
+      const g = Math.round(this.lerp(g1, g2, progress));
+      const b = Math.round(this.lerp(b1, b2, progress));
+  
       this.root.style.setProperty(cssVariable, `rgb(${r}, ${g}, ${b})`);
-
-      if (currentStep++ >= steps) {
-        clearInterval(interval);
+  
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
         this.activeIntervals.delete(cssVariable);
       }
-    }, 16);
-
-    this.activeIntervals.set(cssVariable, interval as unknown as number);
-  }
+    };
+  
+    if (this.activeIntervals.has(cssVariable)) {
+      cancelAnimationFrame(this.activeIntervals.get(cssVariable)!);
+      this.activeIntervals.delete(cssVariable);
+    }    
+  
+    const animationFrameId = requestAnimationFrame(step);
+    this.activeIntervals.set(cssVariable, animationFrameId as unknown as number);
+  }  
 
   private lerp(start: number, end: number, t: number): number {
     return start + (end - start) * t;

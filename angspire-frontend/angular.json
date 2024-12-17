@@ -57,7 +57,6 @@
               "src/styles.scss"
             ],
             "scripts": [
-              "theme-sync.js"
             ]
           },
           "configurations": {
