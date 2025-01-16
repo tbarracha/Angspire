@@ -44,22 +44,60 @@
     /* Theme END */
 }
 
-/* Custom Scrollbar Styling */
+/* Global Slender Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
-}
-
-// background
-::-webkit-scrollbar-track {
-    background: var(--scrollbar-bg);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 8px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-hover);
-}
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 32px;
+  }
+  
+  /* Scrollbar Background Classes */
+  .sb-bg-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sb-bg-primary::-webkit-scrollbar-track {
+    background: var(--primary);
+  }
+  
+  .sb-bg-secondary::-webkit-scrollbar-track {
+    background: var(--secondary);
+  }
+  
+  .sb-bg-accent::-webkit-scrollbar-track {
+    background: var(--accent);
+  }
+  
+  /* Scrollbar Thumb Classes */
+  .sb-th-primary::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+  }
+  
+  .sb-th-secondary::-webkit-scrollbar-thumb {
+    background-color: var(--secondary);
+  }
+  
+  .sb-th-accent::-webkit-scrollbar-thumb {
+    background-color: var(--accent);
+  }
+  
+  /* Scrollbar Thumb Hover Classes */
+  .sb-h-primary::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-hover);
+  }
+  
+  .sb-h-secondary::-webkit-scrollbar-thumb:hover {
+    background-color: var(--secondary-hover);
+  }
+  
+  .sb-h-accent::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent-hover);
+  }
