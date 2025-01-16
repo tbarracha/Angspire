@@ -3,7 +3,7 @@
 // Syncs theme colors between styles.scss, tailwind.config.js, and themes.json
 // ----------------------------------------
 
-// Run with: node theme-sync update
+// Run with: node theme-sync update | node theme-sync clear
 
 const fs = require('fs');
 const path = require('path');
@@ -70,30 +70,42 @@ function updateTailwindConfig(variables, configPath) {
   console.log('Updated Tailwind config with theme colors.');
 }
 
-// Update themes.json with missing variables
+// Update themes.json
 function updateThemesJson(variables, themesJsonPath) {
-  let themes = fs.existsSync(themesJsonPath) ? JSON.parse(fs.readFileSync(themesJsonPath, 'utf-8')) : [];
-  const variableNames = Object.keys(variables);
-  const addedProperties = [];
+  if (!fs.existsSync(themesJsonPath)) {
+    fs.writeFileSync(themesJsonPath, JSON.stringify([{
+      name: "Light",
+      mainDark: "#030712"
+    }, {
+      name: "Dark",
+      mainDark: "#f9fafb"
+    }], null, 2), 'utf-8');
+  }
 
+  let themes = JSON.parse(fs.readFileSync(themesJsonPath, 'utf-8'));
+  if (themes.length === 0) {
+    themes = [
+      {
+        name: "Light"
+      },
+      {
+        name: "Dark"
+      }
+    ];
+  }
+
+  const variableNames = Object.keys(variables);
   themes.forEach((theme) => {
     variableNames.forEach((varName) => {
       const propertyName = toCamelCase(varName);
       if (!(propertyName in theme)) {
         theme[propertyName] = variables[varName];
-        addedProperties.push(`${theme.name}: ${propertyName}`);
       }
     });
   });
 
   fs.writeFileSync(themesJsonPath, JSON.stringify(themes, null, 2), 'utf-8');
-
-  if (addedProperties.length > 0) {
-    console.log('Added the following properties to themes.json:');
-    addedProperties.forEach((prop) => console.log(`- ${prop}`));
-  } else {
-    console.log('No properties added to themes.json. All variables already exist.');
-  }
+  console.log('Updated themes.json with theme variables.');
 }
 
 // Sync themes
@@ -107,13 +119,29 @@ function syncTheme() {
   }
 }
 
+// Clear all themes
+function clearThemes() {
+  // Clear Tailwind theme colors
+  let tailwindContent = fs.readFileSync(tailwindConfigPath, 'utf-8');
+  tailwindContent = tailwindContent.replace(/\/\/ Theme START[\s\S]*?\/\/ Theme END/, '// Theme START\n// Theme END');
+  fs.writeFileSync(tailwindConfigPath, tailwindContent, 'utf-8');
+  console.log('Cleared Tailwind theme colors.');
+
+  // Clear themes.json
+  fs.writeFileSync(themesJsonPath, '[]', 'utf-8');
+  console.log('Cleared themes.json.');
+}
+
 // Command-line arguments
 const command = process.argv[2];
 switch (command) {
   case 'update':
     syncTheme();
     break;
+  case 'clear':
+    clearThemes();
+    break;
   default:
-    console.log('Invalid command. Use "update" to sync themes.');
+    console.log('Invalid command. Use "update" to sync themes or "clear" to remove all themes.');
     break;
 }
