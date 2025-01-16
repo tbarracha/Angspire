@@ -74,11 +74,9 @@ function updateTailwindConfig(variables, configPath) {
 function updateThemesJson(variables, themesJsonPath) {
   if (!fs.existsSync(themesJsonPath)) {
     fs.writeFileSync(themesJsonPath, JSON.stringify([{
-      name: "Light",
-      mainDark: "#030712"
+      name: "Light"
     }, {
-      name: "Dark",
-      mainDark: "#f9fafb"
+      name: "Dark"
     }], null, 2), 'utf-8');
   }
 
