@@ -14,17 +14,17 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly UserManager<AppUser> _userManager;
+        private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
 
-        public AuthenticationController(UserManager<AppUser> userManager, IConfiguration configuration)
+        public AuthenticationController(UserManager<User> userManager, IConfiguration configuration)
         {
             _userManager = userManager;
             _configuration = configuration;
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<string>> Register([FromBody] RegisterDTO model)
+        public async Task<ActionResult<string>> Register([FromBody] RegisterRequest model)
         {
             Console.WriteLine($"Incoming model: {System.Text.Json.JsonSerializer.Serialize(model)}");
 
@@ -33,7 +33,7 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
                 return BadRequest(ModelState);
             }
 
-            var newUser = new AppUser
+            var newUser = new User
             {
                 Name = model.Name,
                 UserName = model.Email,
@@ -49,7 +49,7 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
                 return BadRequest(result.Errors);
             }
 
-            return Ok(new AuthResponseDTO
+            return Ok(new AuthResponse
             {
                 Result = true,
                 Message = "User registered successfully",
@@ -57,17 +57,17 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponseDTO>> Login(LoginDTO model)
+        public async Task<ActionResult<AuthResponse>> Login(LoginRequest model)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            AppUser? user = await _userManager.FindByEmailAsync(model.Email);
+            User? user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
-                return Unauthorized(new AuthResponseDTO
+                return Unauthorized(new AuthResponse
                 {
                     Result = false,
                     Message = "Invalid username and password combination",
@@ -78,7 +78,7 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
             bool isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
             if (!isPasswordValid)
             {
-                return Unauthorized(new AuthResponseDTO
+                return Unauthorized(new AuthResponse
                 {
                     Result = false,
                     Message = "Invalid username and password combination",
@@ -88,7 +88,7 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
 
             string token = CreateToke(user);
 
-            return Ok(new AuthResponseDTO
+            return Ok(new AuthResponse
             {
                 Result = true,
                 Message = "User logged in successfully",
@@ -96,30 +96,21 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
             });
         }
 
-        private string CreateToke(AppUser user)
+        private string CreateToke(User user)
         {
             IConfigurationSection authSettings = _configuration.GetSection("AuthSettings");
 
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             byte[] key = Encoding.ASCII.GetBytes(authSettings.GetSection("securityKey").Value!);
 
-            // Create a list of claims including one with ClaimTypes.Name
             List<Claim> claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Aud, authSettings.GetSection("validAudience").Value!),
                 new Claim(JwtRegisteredClaimNames.Iss, authSettings.GetSection("validIssuer").Value!),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
-                // Add a claim with the type ClaimTypes.Name so that User.Identity.Name is correctly populated
                 new Claim(ClaimTypes.Name, user.Name ?? ""),
                 new Claim(JwtRegisteredClaimNames.NameId, user.Id ?? ""),
             };
-
-            // Optional: log the claims for debugging
-            Console.WriteLine("Creating token with the following claims:");
-            foreach (var claim in claims)
-            {
-                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
-            }
 
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {

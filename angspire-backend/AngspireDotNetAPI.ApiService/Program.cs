@@ -22,7 +22,7 @@ builder.Services.AddDbContext<AppIdentityDbContext>(options =>
 });
 
 // Add Identity services
-builder.Services.AddIdentity<AppUser, IdentityRole>()
+builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppIdentityDbContext>()
     .AddDefaultTokenProviders();
 
@@ -119,8 +119,6 @@ app.UseCors(options =>
     options.AllowAnyMethod();
     options.AllowAnyHeader();
 });
-
-// Note: Removed the duplicate app.UseCors()
 
 // Enable Authentication Middleware
 app.UseAuthentication();

@@ -2,7 +2,7 @@
 
 namespace AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels
 {
-    public class LoginDTO
+    public class LoginRequest
     {
         [Required]
         public string Email { get; set; } = string.Empty;

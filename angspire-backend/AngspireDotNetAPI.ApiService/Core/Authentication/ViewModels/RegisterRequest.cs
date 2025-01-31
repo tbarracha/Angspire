@@ -2,7 +2,7 @@
 
 namespace AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels
 {
-    public class RegisterDTO
+    public class RegisterRequest
     {
         [Required(ErrorMessage = "Name is required")]
         public string Name { get; set; } = string.Empty;

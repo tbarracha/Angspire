@@ -1,6 +1,6 @@
 ﻿namespace AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels
 {
-    public class AuthResponseDTO
+    public class AuthResponse
     {
         public string Token { get; set; } = string.Empty;
 
