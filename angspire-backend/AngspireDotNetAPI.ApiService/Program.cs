@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Diagnostics;
 using System.Text;
 
 // Swagger: https://localhost:7361/swagger/index.html
@@ -110,6 +111,29 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     app.MapOpenApi();
+
+    // Automatically open swagger UI in the default browser
+    Task.Run(async () =>
+    {
+        // Wait a short time for the server to be fully up and running.
+        await Task.Delay(1500);
+        // Get one of the server URLs (for example, the first one).
+        var url = app.Urls.FirstOrDefault() ?? "http://localhost:7361";
+        var swaggerUrl = $"{url}/swagger";
+        try
+        {
+            Console.WriteLine($"Opening Swagger UI at {swaggerUrl}");
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = swaggerUrl,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to open Swagger UI automatically: {ex.Message}");
+        }
+    });
 }
 
 // Configure CORS to Allow Any Origin, Method, and Header
