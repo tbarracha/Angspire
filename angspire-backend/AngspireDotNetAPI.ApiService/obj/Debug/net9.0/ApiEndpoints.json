@@ -60,5 +60,15 @@
     "Order": 0,
     "Parameters": [],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AngspireDotNetAPI.ApiService.Core.Controllers.HelloController",
+    "Method": "HelloAuth",
+    "RelativePath": "api/hello/auth",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
   }
 ]

@@ -103,14 +103,23 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             byte[] key = Encoding.ASCII.GetBytes(authSettings.GetSection("securityKey").Value!);
 
+            // Create a list of claims including one with ClaimTypes.Name
             List<Claim> claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Aud, authSettings.GetSection("validAudience").Value!),
                 new Claim(JwtRegisteredClaimNames.Iss, authSettings.GetSection("validIssuer").Value!),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
-                new Claim(JwtRegisteredClaimNames.Name, user.Name ?? ""),
+                // Add a claim with the type ClaimTypes.Name so that User.Identity.Name is correctly populated
+                new Claim(ClaimTypes.Name, user.Name ?? ""),
                 new Claim(JwtRegisteredClaimNames.NameId, user.Id ?? ""),
             };
+
+            // Optional: log the claims for debugging
+            Console.WriteLine("Creating token with the following claims:");
+            foreach (var claim in claims)
+            {
+                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
+            }
 
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {

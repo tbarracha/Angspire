@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SwaggerUi.Aspire.Hosting")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6361fe2dbe0a6a24f45e79841a211c4f973bacf2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6a63da436e8ae905288ba3128383f0aa6e55a80a")]
 [assembly: System.Reflection.AssemblyProductAttribute("SwaggerUi.Aspire.Hosting")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SwaggerUi.Aspire.Hosting")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

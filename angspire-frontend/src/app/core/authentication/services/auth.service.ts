@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment.development';
 import { map, Observable } from 'rxjs';
@@ -67,5 +67,26 @@ export class AuthService {
     }
 
     return true;
+  }
+
+  helloAuth(): Observable<string> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error("User is not authenticated.");
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    console.log("Calling HelloAuth endpoint with token:", token);
+
+    return this.http.get(`${this.apiUrl}/hello/auth`, { headers, responseType: 'text' })
+      .pipe(
+        map(response => {
+          console.log("Received HelloAuth response:", response);
+          return response;
+        })
+      );
   }
 }

@@ -186,9 +186,28 @@ import { AuthService } from './core/authentication/services/auth.service';
     <div *ngIf="authState === 'loggedIn'" class="text-center">
       <h2 class="text-xl font-semibold mb-4">Welcome</h2>
       <p class="mb-4">Logged in as {{ userEmail }}</p>
-      <button class="px-4 py-2 rounded bg-accent text-highlight hover:underline" (click)="toggleAuthState('login')">
+
+      <!-- Logout Button -->
+      <button class="px-4 py-2 rounded bg-accent text-highlight hover:underline mb-4" (click)="logout()">
         Logout
       </button>
+
+      <!-- Hello Button -->
+      <div class="mb-4">
+        <button class="px-4 py-2 rounded bg-primary text-primary-contrast hover:bg-primary-dark transition" (click)="onHelloClick()">
+          Hello
+        </button>
+      </div>
+
+      <!-- HelloAuth Response -->
+      <div *ngIf="helloAuthMessage" class="text-green-500">
+        {{ helloAuthMessage }}
+      </div>
+
+      <!-- HelloAuth Error -->
+      <div *ngIf="helloAuthError" class="text-red-500">
+        {{ helloAuthError }}
+      </div>
     </div>
   </div>
 </ng-template>
@@ -323,6 +342,9 @@ export class AngspireHome {
 
   userEmail = '';
   loginError = '';
+  
+  helloAuthMessage: string = '';
+  helloAuthError: string = '';
 
   loginForm: FormGroup;
   registerForm: FormGroup;
@@ -449,6 +471,14 @@ export class AngspireHome {
     });
   }
 
+  logout(): void {
+    this.authService.logout();
+    this.authState = 'login';
+    this.userEmail = '';
+    this.helloAuthMessage = '';
+    this.helloAuthError = '';
+  }
+
   // ----------------------------------------------
   // Register
   // ----------------------------------------------
@@ -496,5 +526,24 @@ export class AngspireHome {
   private handleError(context: string, err: any): void {
     console.error(`${context} error:`, err);
     this.loginError = `An error occurred during ${context.toLowerCase()}. Please try again.`;
+  }
+
+  // ----------------------------------------------
+  // HelloAuth Handling
+  // ----------------------------------------------
+
+  onHelloClick(): void {
+    this.helloAuthMessage = '';
+    this.helloAuthError = '';
+
+    this.authService.helloAuth().subscribe({
+      next: (message: string) => {
+        this.helloAuthMessage = message;
+      },
+      error: (err) => {
+        console.error('HelloAuth error:', err);
+        this.helloAuthError = 'Failed to retrieve authenticated greeting. Please try again.';
+      },
+    });
   }
 }
