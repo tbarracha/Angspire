@@ -61,6 +61,6 @@ https://github.com/user-attachments/assets/843da791-19e4-4ac7-8eca-7ed4a4caa987
 ## Todo
 - [ ] Sync themes from theme.json to styles.scss
 - [ ] Theme Designer
-- [ ] Open Swagger on project run
+- [x] Open Swagger on project run
 
 ### [Changelog](https://github.com/tbarracha/Angspire/blob/main/CHANGELOG.md)
