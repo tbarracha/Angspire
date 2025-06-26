@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AngspireDotNetAPI.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6a63da436e8ae905288ba3128383f0aa6e55a80a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1e7fe035fa18315df650f7182e34d570504f9f3e")]
 [assembly: System.Reflection.AssemblyProductAttribute("AngspireDotNetAPI.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AngspireDotNetAPI.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

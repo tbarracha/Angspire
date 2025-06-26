@@ -9,21 +9,11 @@
     "Parameters": [
       {
         "Name": "model",
-        "Type": "AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels.LoginDTO",
+        "Type": "AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels.LoginRequest",
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels.AuthResponseDTO",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "AngspireDotNetAPI.ApiService.Core.Authentication.Controllers.AuthenticationController",
@@ -35,21 +25,21 @@
     "Parameters": [
       {
         "Name": "model",
-        "Type": "AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels.RegisterDTO",
+        "Type": "AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels.RegisterRequest",
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "System.String",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AngspireDotNetAPI.ApiService.Core.Authentication.Controllers.AuthenticationController",
+    "Method": "GetAllUsers",
+    "RelativePath": "api/auth/users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "AngspireDotNetAPI.ApiService.Core.Controllers.HelloController",

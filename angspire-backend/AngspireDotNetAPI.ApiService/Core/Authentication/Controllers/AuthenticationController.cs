@@ -1,12 +1,8 @@
-﻿using AngspireDotNetAPI.ApiService.Core.Authentication.Models;
-using AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using AngspireDotNetAPI.ApiService.Core.Authentication.ViewModels;
+using AngspireDotNetAPI.ApiService.Core.Authentication.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
 {
@@ -14,117 +10,77 @@ namespace AngspireDotNetAPI.ApiService.Core.Authentication.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly UserManager<User> _userManager;
-        private readonly IConfiguration _configuration;
+        private readonly AuthenticationService _authService;
+        private readonly ILogger<AuthenticationController> _logger;
 
-        public AuthenticationController(UserManager<User> userManager, IConfiguration configuration)
+        public AuthenticationController(AuthenticationService authService, ILogger<AuthenticationController> logger)
         {
-            _userManager = userManager;
-            _configuration = configuration;
+            _authService = authService;
+            _logger = logger;
         }
 
+        /// <summary>
+        /// Registers a new user.
+        /// </summary>
         [HttpPost("register")]
-        public async Task<ActionResult<string>> Register([FromBody] RegisterRequest model)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest model)
         {
-            Console.WriteLine($"Incoming model: {System.Text.Json.JsonSerializer.Serialize(model)}");
+            _logger.LogInformation("Register attempt for Email: {Email}", model.Email);
+            var response = await _authService.RegisterAsync(model);
 
-            if (!ModelState.IsValid)
+            if (!response.Result)
             {
-                return BadRequest(ModelState);
+                _logger.LogWarning("Registration failed for Email: {Email}. Errors: {Errors}",
+                    model.Email, response.Errors != null ? string.Join(", ", response.Errors) : "None");
             }
 
-            var newUser = new User
-            {
-                Name = model.Name,
-                UserName = model.Email,
-                Email = model.Email,
-            };
-
-            var result = await _userManager.CreateAsync(newUser, model.Password);
-
-            Console.WriteLine("Register Result:\n", result);
-
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
-            }
-
-            return Ok(new AuthResponse
-            {
-                Result = true,
-                Message = "User registered successfully",
-            });
+            return response.Result ? Ok(response) : BadRequest(response);
         }
 
+        /// <summary>
+        /// Logs in an existing user.
+        /// </summary>
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponse>> Login(LoginRequest model)
+        public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
-            if (!ModelState.IsValid)
+            _logger.LogInformation("Login attempt for Email: {Email}", model.Email);
+            var response = await _authService.LoginAsync(model);
+
+            if (!response.Result)
             {
-                return BadRequest(ModelState);
+                _logger.LogWarning("Login failed for Email: {Email}", model.Email);
+            }
+            else
+            {
+                _logger.LogInformation("Login successful for Email: {Email}", model.Email);
             }
 
-            User? user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-            {
-                return Unauthorized(new AuthResponse
-                {
-                    Result = false,
-                    Message = "Invalid username and password combination",
-                    Token = ""
-                });
-            }
-
-            bool isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
-            if (!isPasswordValid)
-            {
-                return Unauthorized(new AuthResponse
-                {
-                    Result = false,
-                    Message = "Invalid username and password combination",
-                    Token = ""
-                });
-            }
-
-            string token = CreateToke(user);
-
-            return Ok(new AuthResponse
-            {
-                Result = true,
-                Message = "User logged in successfully",
-                Token = token,
-            });
+            return response.Result ? Ok(response) : Unauthorized(response);
         }
 
-        private string CreateToke(User user)
+        /// <summary>
+        /// Retrieves all users (requires authentication).
+        /// </summary>
+        [Authorize]
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
         {
-            IConfigurationSection authSettings = _configuration.GetSection("AuthSettings");
+            _logger.LogInformation("GET /api/auth/users endpoint hit.");
 
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            byte[] key = Encoding.ASCII.GetBytes(authSettings.GetSection("securityKey").Value!);
-
-            List<Claim> claims = new List<Claim>
+            // Log user claims from the JWT token
+            if (User.Identity?.IsAuthenticated ?? false)
             {
-                new Claim(JwtRegisteredClaimNames.Aud, authSettings.GetSection("validAudience").Value!),
-                new Claim(JwtRegisteredClaimNames.Iss, authSettings.GetSection("validIssuer").Value!),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
-                new Claim(ClaimTypes.Name, user.Name ?? ""),
-                new Claim(JwtRegisteredClaimNames.NameId, user.Id ?? ""),
-            };
-
-            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+                _logger.LogInformation("Authenticated request from UserId: {UserId}, Email: {Email}", userId, userEmail);
+            }
+            else
             {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(1),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature
-                )
-            };
+                _logger.LogWarning("Unauthorized access attempt to /api/auth/users");
+            }
 
-            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-
-            return tokenHandler.WriteToken(token);
+            var users = await _authService.GetAllUsersAsync();
+            return Ok(users);
         }
     }
 }

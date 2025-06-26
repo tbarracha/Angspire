@@ -1,5 +1,7 @@
 using AngspireDotNetAPI.ApiService.Core;
 using AngspireDotNetAPI.ApiService.Core.Authentication.Models;
+using AngspireDotNetAPI.ApiService.Core.Authentication.Services;
+using AngspireDotNetAPI.ApiService.Core.Authentication.Controllers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -13,24 +15,31 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Force-enable console logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Trace);
+
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
+// Read configuration for automatic migrations
+var enableAutoMigrations = builder.Configuration.GetValue<bool>("DatabaseSettings:EnableAutoMigrations");
+
 // Add DbContext with PostgreSQL
+var identityDbConnectionString = builder.Configuration.GetConnectionString("IdentityConnection");
+
 builder.Services.AddDbContext<AppIdentityDbContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+    options.UseNpgsql(identityDbConnectionString));
 
 // Add Identity services
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppIdentityDbContext>()
     .AddDefaultTokenProviders();
 
-// Configure Authentication Settings
+// Configure JWT Authentication
 var authSettings = builder.Configuration.GetSection("AuthSettings");
 
-// Configure JWT Authentication
 builder.Services.AddAuthentication(authOptions =>
 {
     authOptions.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -43,7 +52,7 @@ builder.Services.AddAuthentication(authOptions =>
     jwtOptions.SaveToken = true;
     jwtOptions.TokenValidationParameters = new TokenValidationParameters
     {
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authSettings.GetSection("securityKey").Value!)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authSettings["securityKey"]!)),
         ValidateAudience = true,
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true,
@@ -53,11 +62,14 @@ builder.Services.AddAuthentication(authOptions =>
     };
 });
 
+// Register Authentication Services
+builder.Services.AddScoped<AuthenticationService>();
+
 // Add Controllers with Route Convention
 builder.Services.AddControllers(options =>
 {
     options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
-});
+}).AddApplicationPart(typeof(AuthenticationController).Assembly);
 
 // Add Problem Details Middleware
 builder.Services.AddProblemDetails();
@@ -100,7 +112,33 @@ builder.Services.AddSwaggerGen(swaggerOptions =>
 // Build the app
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Apply Database Migrations Conditionally
+if (enableAutoMigrations)
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var identityDbContext = services.GetRequiredService<AppIdentityDbContext>();
+            identityDbContext.Database.Migrate(); // Apply identity DB migrations
+
+            // Ensure Admin User Exists
+            var authService = services.GetRequiredService<AuthenticationService>();
+            await authService.EnsureAdminUserAsync();
+
+            Console.WriteLine("Admin user check complete.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred during startup: {ex.Message}");
+        }
+    }
+}
+else
+{
+    Console.WriteLine("Auto migrations are disabled via appsettings.json.");
+}
 
 // Global Exception Handler
 app.UseExceptionHandler();
@@ -112,12 +150,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapOpenApi();
 
-    // Automatically open swagger UI in the default browser
+    // Automatically open Swagger UI in the default browser
     Task.Run(async () =>
     {
-        // Wait a short time for the server to be fully up and running.
         await Task.Delay(1500);
-        // Get one of the server URLs (for example, the first one).
         var url = app.Urls.FirstOrDefault() ?? "http://localhost:7361";
         var swaggerUrl = $"{url}/swagger";
         try
@@ -136,7 +172,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Configure CORS to Allow Any Origin, Method, and Header
+// Configure CORS
 app.UseCors(options =>
 {
     options.AllowAnyOrigin();
@@ -144,10 +180,8 @@ app.UseCors(options =>
     options.AllowAnyHeader();
 });
 
-// Enable Authentication Middleware
+// Enable Authentication & Authorization Middleware
 app.UseAuthentication();
-
-// Enable Authorization Middleware
 app.UseAuthorization();
 
 // Map controller endpoints

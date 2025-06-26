@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { AngspireHome } from "./angspire.landing";
+import { AppFooterComponent } from "./pages/app-footer.component";
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AngspireHome],
+  imports: [RouterOutlet, AppFooterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
