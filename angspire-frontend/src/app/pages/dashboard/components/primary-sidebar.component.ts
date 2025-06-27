@@ -32,8 +32,10 @@ export class PrimarySidebarComponent implements AfterViewInit {
   };
 
   menuItems: SidebarMenuItem[] = [
-    { icon: '🏠', label: 'Home', route: '/dashboard/home' },
-    { icon: '📄', label: 'Docs', route: '/dashboard/docs' }
+    { icon: '🏠', label: 'Home', route: '/home' },
+    { icon: '👥', label: 'IAM', route: '/iam' },
+    { icon: '🎨', label: 'Theme', route: '/theme' },
+    { icon: '📄', label: 'Docs', route: '/docs' }
   ];
 
   bottomMenuItems: SidebarMenuItem[] = [

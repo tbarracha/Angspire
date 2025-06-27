@@ -1,7 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from './sidebar.component';
 import { SidebarMenuItem } from '../../models/SidebarMenuItem';
+import { Router } from '@angular/router';
+import { HOME_SIDEBAR_MENU } from '../pages/home/sidebar.config';
+import { IAM_SIDEBAR_MENU } from '../pages/iam/sidebar.config';
+import { THEME_SIDEBAR_MENU } from '../pages/theme/sidebar.config';
+import { DOCS_SIDEBAR_MENU } from '../pages/docs/sidebar.config';
 
 type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
 
@@ -11,7 +16,7 @@ type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
   imports: [CommonModule, SidebarComponent],
   template: `
     <app-sidebar
-      [menuItems]="menuItems"
+      [menuItems]="menuItems()"
       [bottomMenuItems]="bottomMenuItems"
       [isCollapsed]="isCollapsed"
       variant="secondary"
@@ -24,14 +29,18 @@ export class SecondarySidebarComponent {
   sidebarState: SidebarState = 'expanded';
   isCollapsed = false;
 
-  menuItems: SidebarMenuItem[] = [
-    { icon: '📁', label: 'Projects', route: '/dashboard/projects' },
-    { icon: '🗓️', label: 'Calendar', route: '/dashboard/calendar' },
-    { icon: '🔔', label: 'Notifications', route: '/dashboard/notifications' }
-  ];
+  private router = inject(Router);
 
-  bottomMenuItems: SidebarMenuItem[] = [
-  ];
+  readonly menuItems = computed((): SidebarMenuItem[] => {
+    const url = this.router.url;
+    
+    if (url.startsWith('/iam')) return IAM_SIDEBAR_MENU;
+    if (url.startsWith('/theme')) return THEME_SIDEBAR_MENU;
+    if (url.startsWith('/docs')) return DOCS_SIDEBAR_MENU;
+    return HOME_SIDEBAR_MENU;
+  });
+
+  bottomMenuItems: SidebarMenuItem[] = [];
 
   toggleCollapse() {
     if (this.isCollapsed) {
