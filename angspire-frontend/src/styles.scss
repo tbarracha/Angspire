@@ -5,23 +5,29 @@
 :root {
     /* node theme-sync update */
     /* Theme START */
-    --header: #1C1C1C;
+    --header: #18181b;
     --header-contrast: #FFFFFF;
 
     --background: #FFFFFF;
     --background-contrast: #18181b;
 
-    --footer: #1C1C1C;
+    --nav-bar: #18181b;
+    --nav-bar-contrast: #FFFFFF;
+
+    --secondary-nav-bar: #3f3f46;
+    --secondary-nav-bar-contrast: #FFFFFF;
+
+    --footer: #18181b;
     --footer-contrast: #FFFFFF;
 
-    --primary: #1C1C1C;
+    --primary: #18181b;
     --primary-contrast: #FFFFFF;
 
     --secondary: #2B2B2B;
     --secondary-contrast: #FFFFFF;
 
     --highlight: #EDEDED;
-    --highlight-contrast: #1C1C1C;
+    --highlight-contrast: #18181b;
 
     --accent: #D80032;
     --accent-contrast: #FFFFFF;

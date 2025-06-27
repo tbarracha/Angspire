@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <footer class="h-6 w-full px-2 flex items-center justify-start bg-footer text-footer-contrast">
+    <footer class="h-6 w-full px-2 flex items-center justify-center bg-zinc-900 text-footer-contrast">
       <p class="text-sm flex items-center space-x-1">
         <span>Made with</span>
         <svg

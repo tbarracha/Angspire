@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { AuthContainerComponent } from './pages/auth/auth-container.component';
 import { LoginPageComponent } from './pages/auth/login-page.component';
 import { RegisterPageComponent } from './pages/auth/register-page.component';
+import { DashboardContainerComponent } from './pages/dashboard/dashboard-container.component';
 
 export const routes: Routes = [
   {
@@ -17,5 +18,10 @@ export const routes: Routes = [
       { path: 'register', component: RegisterPageComponent },
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
+  },
+  {
+    path: 'dashboard',
+    component: DashboardContainerComponent
   }
+
 ];

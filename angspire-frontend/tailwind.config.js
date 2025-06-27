@@ -12,6 +12,10 @@ module.exports = {
         'header-contrast': 'var(--header-contrast)',
         'background': 'var(--background)',
         'background-contrast': 'var(--background-contrast)',
+        'nav-bar': 'var(--nav-bar)',
+        'nav-bar-contrast': 'var(--nav-bar-contrast)',
+        'secondary-nav-bar': 'var(--secondary-nav-bar)',
+        'secondary-nav-bar-contrast': 'var(--secondary-nav-bar-contrast)',
         'footer': 'var(--footer)',
         'footer-contrast': 'var(--footer-contrast)',
         'primary': 'var(--primary)',
@@ -33,7 +37,7 @@ module.exports = {
         'warning-secondary': 'var(--warning-secondary)',
         'danger': 'var(--danger)',
         'danger-secondary': 'var(--danger-secondary)',
-        // Theme END
+// Theme END
         },
       },
     },

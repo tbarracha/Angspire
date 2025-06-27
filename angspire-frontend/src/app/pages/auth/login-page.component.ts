@@ -2,10 +2,9 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../core/authentication/services/auth.service';
-import { AuthLoginModel } from '../../core/authentication/models/auth-login-model';
-import { AuthResponseModel } from '../../core/authentication/models/auth-response-model';
 import { Router, RouterModule } from '@angular/router';
 import { SocialLoginButtonsComponent } from "./social-login-buttons.component";
+import { LoginRequestDto } from '../../core/dtos/App/Authentication/Requests/login-request-dto';
 
 @Component({
   selector: 'app-login-page',
@@ -72,7 +71,6 @@ import { SocialLoginButtonsComponent } from "./social-login-buttons.component";
 })
 export class LoginPageComponent {
   @Output() loggedIn = new EventEmitter<void>();
-
   loginForm: FormGroup;
   loginError = '';
 
@@ -91,20 +89,17 @@ export class LoginPageComponent {
   onSubmit(): void {
     if (this.loginForm.invalid) return;
 
-    const { email, password } = this.loginForm.value;
+    const dto: LoginRequestDto = this.loginForm.value;
     this.loginError = '';
 
-    this.authService.login({ email, password } as AuthLoginModel).subscribe({
-      next: (response: AuthResponseModel) => {
-        if (response.result) {
-          this.loggedIn.emit();
-        } else {
-          this.loginError = response.message;
-        }
+    this.authService.login(dto).subscribe({
+      next: () => {
+        this.loggedIn.emit();
+        this.router.navigate(['/dashboard']); // or your post-login route
       },
       error: (err) => {
         console.error('Login error:', err);
-        this.loginError = 'An unexpected error occurred. Please try again.';
+        this.loginError = err?.error?.Error ?? 'Login failed. Please try again.';
       }
     });
   }

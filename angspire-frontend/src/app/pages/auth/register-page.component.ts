@@ -6,9 +6,8 @@ import {
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/authentication/services/auth.service';
-import { AuthRegisterModel } from '../../core/authentication/models/auth-register-model';
-import { AuthResponseModel } from '../../core/authentication/models/auth-response-model';
 import { SocialLoginButtonsComponent } from './social-login-buttons.component';
+import { RegisterRequestDto } from '../../core/dtos/App/Authentication/Requests/register-request-dto';
 
 @Component({
   selector: 'app-register-page',
@@ -146,27 +145,20 @@ export class RegisterPageComponent {
   onSubmit(): void {
     if (this.registerForm.invalid) return;
 
-    const { email, password, confirmPassword, name, lastName } = this.registerForm.value;
-    const registerData: AuthRegisterModel = {
+    const { email, password, name, lastName } = this.registerForm.value;
+    const dto: RegisterRequestDto = {
       email,
       password,
-      confirmPassword,
-      name: name?.trim() || email,
+      firstName: name?.trim() || email,
       lastName: lastName?.trim() || ''
     };
 
     this.registerError = '';
-    this.authService.register(registerData).subscribe({
-      next: (response: AuthResponseModel) => {
-        if (response.result) {
-          this.router.navigate(['/auth/login']);
-        } else {
-          this.registerError = response.message;
-        }
-      },
+    this.authService.register(dto).subscribe({
+      next: () => this.router.navigate(['/auth/login']),
       error: (err) => {
         console.error('Register error:', err);
-        this.registerError = 'An unexpected error occurred. Please try again.';
+        this.registerError = err?.error?.Error ?? 'Registration failed. Please try again.';
       }
     });
   }
