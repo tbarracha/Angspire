@@ -1,32 +1,48 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { LogoLinkComponent } from '../../components/logo-link.component';
+import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 
 @Component({
   selector: 'app-primary-sidebar',
   standalone: true,
-  imports: [CommonModule, LogoLinkComponent],
+  imports: [CommonModule, RouterModule, LogoLinkComponent],
   template: `
-    <aside class="h-full w-12 bg-nav-bar text-nav-bar-contrast flex flex-col justify-between
-    transition-all duration-300 ease-in-out"
-    [class]="isCollapsed ? 'w-12' : 'w-48'"
+    <aside
+      class="h-full bg-nav-bar text-nav-bar-contrast flex flex-col justify-between transition-all duration-300 ease-in-out"
+      [class.w-12]="isCollapsed"
+      [class.w-48]="!isCollapsed"
     >
-
       <!-- Top: Logo -->
-      <div class="flex flex-col items-center h-12 p-2">
-        <app-logo-link height="h-10" />
+      <div class="flex flex-col h-12 p-2">
+        <app-logo-link height="h-10"
+        [collapsed]="isCollapsed"
+        [labelPosition]="'left'"
+        [justifyPosition]="'justify-left'"
+        [gap]="'gap-4'"
+        [label]="'Angspire'"
+        />
       </div>
 
       <!-- Middle: Scrollable Menu -->
-      <div class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center space-y-4 px-2">
-        <button class="w-10 h-10 rounded hover:bg-primary-contrast/10">🏠</button>
-        <button class="w-10 h-10 rounded hover:bg-primary-contrast/10">📄</button>
-        <button class="w-10 h-10 rounded hover:bg-primary-contrast/10">⚙️</button>
-        <!-- Add more icons as needed -->
+      <div class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col space-y-2 px-2">
+        @for (item of menuItems; track item.route) {
+          <a
+            [routerLink]="item.route"
+            class="flex items-center gap-2 px-2 py-2 rounded hover:bg-primary-contrast/10"
+            [ngClass]="isCollapsed ? 'justify-center' : 'justify-start'"
+          >
+            <span class="text-xl">{{ item.icon }}</span>
+            @if (!isCollapsed) {
+              <span class="whitespace-nowrap">{{ item.label }}</span>
+            }
+          </a>
+        }
       </div>
 
       <!-- Bottom: User + Toggle -->
-      <div class="flex flex-col items-center gap-2 p-2">
+      <div class="flex flex-col items-center gap-2 p-2 w-full">
         <button class="w-10 h-10 rounded-full hover:bg-primary-contrast/10">👤</button>
         <button
           (click)="toggleCollapse()"
@@ -35,12 +51,17 @@ import { LogoLinkComponent } from '../../components/logo-link.component';
           {{ isCollapsed ? '➡️' : '⬅️' }}
         </button>
       </div>
-
     </aside>
   `
 })
 export class PrimarySidebarComponent {
   isCollapsed = false;
+
+  menuItems: SidebarMenuItem[] = [
+    { icon: '🏠', label: 'Home', route: '/dashboard/home' },
+    { icon: '📄', label: 'Docs', route: '/dashboard/docs' },
+    { icon: '⚙️', label: 'Settings', route: '/dashboard/settings' }
+  ];
 
   toggleCollapse() {
     this.isCollapsed = !this.isCollapsed;

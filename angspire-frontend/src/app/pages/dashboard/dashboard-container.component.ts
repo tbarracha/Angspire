@@ -8,7 +8,7 @@ import { PrimarySidebarComponent } from './components/primary-sidebar.component'
   standalone: true,
   imports: [CommonModule, RouterOutlet, PrimarySidebarComponent],
   template: `
-    <div class="flex h-screen w-full bg-background text-background-contrast">
+    <div class="flex h-full w-full bg-background text-background-contrast">
 
       <!-- Primary Sidebar -->
       <app-primary-sidebar />
