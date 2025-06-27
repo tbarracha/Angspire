@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { AuthService } from '../../core/authentication/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { SocialLoginButtonsComponent } from "./social-login-buttons.component";
-import { LoginRequestDto } from '../../domain/dtos/App/Authentication/Requests/login-request-dto';
+import { LoginRequestDto } from '../../domain/dtos/Authentication/Requests/login-request-dto';
 
 @Component({
   selector: 'app-login-page',
@@ -95,7 +95,7 @@ export class LoginPageComponent {
     this.authService.login(dto).subscribe({
       next: () => {
         this.loggedIn.emit();
-        this.router.navigate(['/dashboard']); // or your post-login route
+        this.router.navigate(['/home']); // or your post-login route
       },
       error: (err) => {
         console.error('Login error:', err);

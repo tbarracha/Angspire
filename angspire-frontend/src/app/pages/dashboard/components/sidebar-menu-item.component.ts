@@ -11,11 +11,10 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
     @if (item.route) {
       <a
         [routerLink]="item.route"
-        class="flex items-center px-2 py-2 rounded hover:bg-primary-contrast/10 transition-all duration-150 w-full"
-        [class.justify-center]="state === 'collapsed'"
-        [class.justify-start]="state !== 'collapsed'"
-        [class.gap-0]="state === 'collapsing'"
-        [class.gap-2]="!collapsed"
+        class="flex items-center px-2 py-2 rounded hover:bg-primary-contrast/10 w-full"
+        [class.justify-center]="isCollapsed"
+        [class.justify-start]="!isCollapsed"
+        [class.gap-2]="!isCollapsed"
       >
         <ng-container *ngTemplateOutlet="content"></ng-container>
       </a>
@@ -23,11 +22,10 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
       <button
         type="button"
         (click)="item.action?.()"
-        class="flex items-center px-2 py-2 rounded hover:bg-primary-contrast/10 transition-all duration-150 w-full"
-        [class.justify-center]="state === 'collapsed'"
-        [class.justify-start]="state !== 'collapsed'"
-        [class.gap-0]="state === 'collapsing'"
-        [class.gap-2]="!collapsed"
+        class="flex items-center px-2 py-2 rounded hover:bg-primary-contrast/10 w-full"
+        [class.justify-center]="isCollapsed"
+        [class.justify-start]="!isCollapsed"
+        [class.gap-2]="!isCollapsed"
       >
         <ng-container *ngTemplateOutlet="content"></ng-container>
       </button>
@@ -41,11 +39,8 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
       }
 
       <span
-        class="transition-all duration-150 ease-in-out overflow-hidden whitespace-nowrap"
-        [class.opacity-0]="state !== 'expanded'"
-        [class.w-0]="state !== 'expanded'"
-        [class.opacity-100]="state === 'expanded'"
-        [class.w-auto]="state === 'expanded'"
+        class="overflow-hidden whitespace-nowrap"
+        [class.hidden]="isCollapsed"
       >
         {{ item.label }}
       </span>
@@ -54,6 +49,5 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 })
 export class SidebarMenuItemComponent {
   @Input() item!: SidebarMenuItem;
-  @Input() collapsed = false;
-  @Input() state: 'expanded' | 'collapsing' | 'collapsed' = 'expanded';
+  @Input() isCollapsed = false;
 }

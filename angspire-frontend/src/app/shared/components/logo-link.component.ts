@@ -5,25 +5,14 @@ import { Component, Input } from '@angular/core';
   standalone: true,
   template: `
     <div
-      [class]="
-        height + ' flex items-center justify-center w-full transition-all duration-150'
-      "
+      [class]="height + ' flex items-center justify-center w-full'"
     >
       <div
         class="flex"
-        [class]="[
-          directionClass,
-          gapClass
-        ]"
+        [class]="[directionClass, gapClass]"
       >
-        @if (labelPosition === 'top' || labelPosition === 'left') {
-          <span
-            class="text-lg text-center whitespace-nowrap transition-all duration-150 ease-in-out overflow-hidden"
-            [class.opacity-0]="state !== 'expanded'"
-            [class.w-0]="state !== 'expanded'"
-            [class.opacity-100]="state === 'expanded'"
-            [class.w-auto]="state === 'expanded'"
-          >
+        @if ((labelPosition === 'top' || labelPosition === 'left') && !isCollapsed) {
+          <span class="text-lg text-center whitespace-nowrap">
             {{ label }}
           </span>
         }
@@ -41,14 +30,8 @@ import { Component, Input } from '@angular/core';
           />
         </a>
 
-        @if (labelPosition === 'bottom' || labelPosition === 'right') {
-          <span
-            class="text-lg text-center whitespace-nowrap transition-all duration-150 ease-in-out overflow-hidden"
-            [class.opacity-0]="state !== 'expanded'"
-            [class.w-0]="state !== 'expanded'"
-            [class.opacity-100]="state === 'expanded'"
-            [class.w-auto]="state === 'expanded'"
-          >
+        @if ((labelPosition === 'bottom' || labelPosition === 'right') && !isCollapsed) {
+          <span class="text-lg font-bold text-center whitespace-nowrap">
             {{ label }}
           </span>
         }
@@ -62,7 +45,7 @@ export class LogoLinkComponent {
   @Input() label = 'logo';
   @Input() href = 'https://github.com/tbarracha/Angspire';
   @Input() labelPosition: 'top' | 'right' | 'bottom' | 'left' = 'bottom';
-  @Input() state: 'expanded' | 'collapsing' | 'collapsed' = 'expanded';
+  @Input() isCollapsed = false;
 
   get directionClass(): string {
     if (this.labelPosition === 'top') return 'flex-col';
@@ -72,8 +55,6 @@ export class LogoLinkComponent {
   }
 
   get gapClass(): string {
-    if (this.state === 'collapsing') return 'gap-0';
-    if (this.state === 'expanded') return 'gap-2';
-    return '';
+    return this.isCollapsed ? '' : 'gap-4';
   }
 }

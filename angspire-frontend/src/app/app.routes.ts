@@ -3,6 +3,7 @@ import { AuthLayoutComponent } from './pages/auth/auth-layout.component';
 import { LoginPageComponent } from './pages/auth/login-page.component';
 import { RegisterPageComponent } from './pages/auth/register-page.component';
 import { DashboardLayoutComponent } from './pages/dashboard/dashboard-layout.component';
+import { HomePageComponent } from './pages/dashboard/home/home-page';
 
 export const routes: Routes = [
   {
@@ -20,8 +21,10 @@ export const routes: Routes = [
     ]
   },
   {
-    path: 'dashboard',
-    component: DashboardLayoutComponent
+    path: 'home',
+    component: DashboardLayoutComponent,
+    children: [
+      { path: '', component: HomePageComponent }
+    ]
   }
-
 ];

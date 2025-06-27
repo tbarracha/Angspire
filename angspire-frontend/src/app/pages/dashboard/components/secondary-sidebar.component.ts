@@ -14,10 +14,7 @@ type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
       [menuItems]="menuItems"
       [bottomMenuItems]="bottomMenuItems"
       [isCollapsed]="isCollapsed"
-      [sidebarState]="sidebarState"
       variant="secondary"
-      [logoLabelPosition]="'top'"
-      [logoHeight]="'h-12'"
       [expandedWidth]="'13rem'"
       [collapsedWidth]="'3.25rem'"
     />

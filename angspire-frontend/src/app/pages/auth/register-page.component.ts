@@ -7,7 +7,7 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/authentication/services/auth.service';
 import { SocialLoginButtonsComponent } from './social-login-buttons.component';
-import { RegisterRequestDto } from '../../domain/dtos/App/Authentication/Requests/register-request-dto';
+import { RegisterRequestDto } from '../../domain/dtos/Authentication/Requests/register-request-dto';
 
 @Component({
   selector: 'app-register-page',

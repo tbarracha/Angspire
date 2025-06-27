@@ -4,7 +4,6 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 import { SidebarMenuItemComponent } from './sidebar-menu-item.component';
 import { LogoLinkComponent } from '../../../shared/components/logo-link.component';
 
-export type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
 export type SidebarVariant = 'primary' | 'secondary';
 
 @Component({
@@ -13,10 +12,8 @@ export type SidebarVariant = 'primary' | 'secondary';
   imports: [RouterModule, SidebarMenuItemComponent, LogoLinkComponent],
   template: `
     <aside
-      class="h-full flex flex-col justify-between transition-all duration-150 ease-in-out shadow-md"
-      [style]="{
-        width: isCollapsed ? collapsedWidth : expandedWidth
-      }"
+      class="h-full flex flex-col justify-between shadow-md"
+      [style.width]="isCollapsed ? collapsedWidth : expandedWidth"
       [class]="
         variant === 'primary'
           ? 'bg-nav-bar text-nav-bar-contrast'
@@ -25,21 +22,21 @@ export type SidebarVariant = 'primary' | 'secondary';
     >
       <!-- Top: Logo -->
       @if (logoItem) {
-      <div
-        class="flex flex-col h-12 p-2"
-        [class.items-center]="isCollapsed"
-        [class.items-start]="!isCollapsed"
-      >
+        <div
+          class="flex flex-col h-12 p-2"
+          [class.items-center]="isCollapsed"
+          [class.items-start]="!isCollapsed"
+        >
           <app-logo-link
-            [src]="logoItem.imgSrc"
+            [src]="logoItem.imgSrc ?? ''"
             [label]="logoItem.label"
-            [href]="logoItem.link"
+            [href]="logoItem.link ?? '#'"
+            [isCollapsed]="isCollapsed"
             [labelPosition]="logoLabelPosition"
             [height]="logoHeight"
-            [state]="sidebarState"
           />
         </div>
-        }
+      }
 
       <!-- Middle: Menu Items -->
       <div
@@ -50,14 +47,13 @@ export type SidebarVariant = 'primary' | 'secondary';
         @for (item of menuItems; track item.route || item.label) {
           <app-sidebar-menu-item
             [item]="item"
-            [collapsed]="isCollapsed"
-            [state]="sidebarState"
+            [isCollapsed]="isCollapsed"
           />
         }
       </div>
 
       <!-- Bottom: Optional Menu Items -->
-      @if (bottomMenuItems?.length) {
+      @if (bottomMenuItems.length) {
         <div
           class="flex flex-col gap-2 p-2 w-full"
           [class.items-center]="isCollapsed"
@@ -66,8 +62,7 @@ export type SidebarVariant = 'primary' | 'secondary';
           @for (item of bottomMenuItems; track item.label) {
             <app-sidebar-menu-item
               [item]="item"
-              [collapsed]="isCollapsed"
-              [state]="sidebarState"
+              [isCollapsed]="isCollapsed"
             />
           }
         </div>
@@ -81,12 +76,11 @@ export class SidebarComponent {
   @Input() bottomMenuItems: SidebarMenuItem[] = [];
 
   @Input() isCollapsed = false;
-  @Input() sidebarState: SidebarState = 'expanded';
   @Input() variant: SidebarVariant = 'primary';
 
   @Input() logoLabelPosition: 'top' | 'right' | 'bottom' | 'left' = 'right';
   @Input() logoHeight: string = 'h-8';
 
-  @Input() expandedWidth = '12rem';   // default w-48
-  @Input() collapsedWidth = '3rem';   // default w-12
+  @Input() expandedWidth = '12rem';
+  @Input() collapsedWidth = '3rem';
 }

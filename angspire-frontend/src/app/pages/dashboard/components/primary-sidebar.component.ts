@@ -15,10 +15,7 @@ type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
       [menuItems]="menuItems"
       [bottomMenuItems]="bottomMenuItems"
       [isCollapsed]="isCollapsed"
-      [sidebarState]="sidebarState"
       variant="primary"
-      [logoLabelPosition]="'right'"
-      [logoHeight]="'h-8'"
       [expandedWidth]="'12rem'"
       [collapsedWidth]="'3rem'"
     />
@@ -36,8 +33,7 @@ export class PrimarySidebarComponent implements AfterViewInit {
 
   menuItems: SidebarMenuItem[] = [
     { icon: '🏠', label: 'Home', route: '/dashboard/home' },
-    { icon: '📄', label: 'Docs', route: '/dashboard/docs' },
-    { icon: '⚙️', label: 'Settings', route: '/dashboard/settings' }
+    { icon: '📄', label: 'Docs', route: '/dashboard/docs' }
   ];
 
   bottomMenuItems: SidebarMenuItem[] = [
@@ -50,7 +46,8 @@ export class PrimarySidebarComponent implements AfterViewInit {
       icon: '👤',
       label: 'Profile',
       action: () => console.log('Open profile modal')
-    }
+    },
+    { icon: '⚙️', label: 'Settings', route: '/dashboard/settings' }
   ];
 
   ngAfterViewInit() {
