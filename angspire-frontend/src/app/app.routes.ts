@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { AuthContainerComponent } from './pages/auth/auth-container.component';
+import { AuthLayoutComponent } from './pages/auth/auth-layout.component';
 import { LoginPageComponent } from './pages/auth/login-page.component';
 import { RegisterPageComponent } from './pages/auth/register-page.component';
-import { DashboardContainerComponent } from './pages/dashboard/dashboard-container.component';
+import { DashboardLayoutComponent } from './pages/dashboard/dashboard-layout.component';
 
 export const routes: Routes = [
   {
@@ -12,7 +12,7 @@ export const routes: Routes = [
   },
   {
     path: 'auth',
-    component: AuthContainerComponent,
+    component: AuthLayoutComponent,
     children: [
       { path: 'login', component: LoginPageComponent },
       { path: 'register', component: RegisterPageComponent },
@@ -21,7 +21,7 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    component: DashboardContainerComponent
+    component: DashboardLayoutComponent
   }
 
 ];

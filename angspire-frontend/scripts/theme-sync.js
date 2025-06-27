@@ -13,10 +13,10 @@ function toCamelCase(str) {
   return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 }
 
-// File paths
-const cssFilePath = path.resolve(__dirname, 'src/styles.scss');
-const tailwindConfigPath = path.resolve(__dirname, 'tailwind.config.js');
-const themesJsonPath = path.resolve(__dirname, 'public/themes.json');
+// File paths - Always resolve from project root
+const cssFilePath = path.resolve(process.cwd(), 'src/styles.scss');
+const tailwindConfigPath = path.resolve(process.cwd(), 'tailwind.config.js');
+const themesJsonPath = path.resolve(process.cwd(), 'public/themes.json');
 
 // Extract variables from styles.scss
 function extractVariablesFromCSS(cssFile) {

@@ -1,13 +1,13 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import { map, Observable } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { EventService } from '../../services/event.service';
-import { LoginRequestDto } from '../../dtos/App/Authentication/Requests/login-request-dto';
-import { RefreshTokenRequestDto } from '../../dtos/App/Authentication/Requests/refresh-token-request-dto';
-import { RegisterRequestDto } from '../../dtos/App/Authentication/Requests/register-request-dto';
-import { AuthResponseDto } from '../../dtos/App/Authentication/Responses/auth-response-dto';
+import { LoginRequestDto } from '../../../domain/dtos/Authentication/Requests/login-request-dto';
+import { RefreshTokenRequestDto } from '../../../domain/dtos/Authentication/Requests/refresh-token-request-dto';
+import { RegisterRequestDto } from '../../../domain/dtos/Authentication/Requests/register-request-dto';
+import { AuthResponseDto } from '../../../domain/dtos/Authentication/Responses/auth-response-dto';
 
 @Injectable({
   providedIn: 'root'

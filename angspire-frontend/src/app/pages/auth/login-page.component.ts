@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { AuthService } from '../../core/authentication/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { SocialLoginButtonsComponent } from "./social-login-buttons.component";
-import { LoginRequestDto } from '../../core/dtos/App/Authentication/Requests/login-request-dto';
+import { LoginRequestDto } from '../../domain/dtos/App/Authentication/Requests/login-request-dto';
 
 @Component({
   selector: 'app-login-page',

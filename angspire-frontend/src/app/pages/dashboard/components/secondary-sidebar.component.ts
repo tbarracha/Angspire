@@ -1,4 +1,4 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from './sidebar.component';
 import { SidebarMenuItem } from '../../models/SidebarMenuItem';
@@ -6,56 +6,35 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
 
 @Component({
-  selector: 'app-primary-sidebar',
+  selector: 'app-secondary-sidebar',
   standalone: true,
   imports: [CommonModule, SidebarComponent],
   template: `
     <app-sidebar
-      [logoItem]="logoItem"
       [menuItems]="menuItems"
       [bottomMenuItems]="bottomMenuItems"
       [isCollapsed]="isCollapsed"
       [sidebarState]="sidebarState"
-      variant="primary"
-      [logoLabelPosition]="'right'"
-      [logoHeight]="'h-8'"
-      [expandedWidth]="'12rem'"
-      [collapsedWidth]="'3rem'"
+      variant="secondary"
+      [logoLabelPosition]="'top'"
+      [logoHeight]="'h-12'"
+      [expandedWidth]="'13rem'"
+      [collapsedWidth]="'3.25rem'"
     />
   `
 })
-export class PrimarySidebarComponent implements AfterViewInit {
-  sidebarState: SidebarState = 'collapsed';
-  isCollapsed = true;
-
-  logoItem: SidebarMenuItem = {
-    imgSrc: '/angspire_icon_neg.png',
-    label: 'Angspire',
-    link: 'https://github.com/tbarracha/Angspire'
-  };
+export class SecondarySidebarComponent {
+  sidebarState: SidebarState = 'expanded';
+  isCollapsed = false;
 
   menuItems: SidebarMenuItem[] = [
-    { icon: '🏠', label: 'Home', route: '/dashboard/home' },
-    { icon: '📄', label: 'Docs', route: '/dashboard/docs' },
-    { icon: '⚙️', label: 'Settings', route: '/dashboard/settings' }
+    { icon: '📁', label: 'Projects', route: '/dashboard/projects' },
+    { icon: '🗓️', label: 'Calendar', route: '/dashboard/calendar' },
+    { icon: '🔔', label: 'Notifications', route: '/dashboard/notifications' }
   ];
 
   bottomMenuItems: SidebarMenuItem[] = [
-    {
-      icon: '➡️',
-      label: 'Collapse',
-      action: () => this.toggleCollapse()
-    },
-    {
-      icon: '👤',
-      label: 'Profile',
-      action: () => console.log('Open profile modal')
-    }
   ];
-
-  ngAfterViewInit() {
-    this.updateCollapseIcon();
-  }
 
   toggleCollapse() {
     if (this.isCollapsed) {
