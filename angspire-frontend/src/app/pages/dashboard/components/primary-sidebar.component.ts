@@ -42,28 +42,40 @@ enum SidebarState {
             [class.justify-start]="sidebarState !== 'collapsed'"
           >
             <span class="text-xl flex-shrink-0">{{ item.icon }}</span>
-
-            <span
-              class="transition-opacity duration-150 ease-in-out overflow-hidden"
-              [class.opacity-0]="sidebarState !== 'expanded'"
-              [class.opacity-100]="sidebarState === 'expanded'"
-              *ngIf="sidebarState !== 'collapsed'"
-            >
-              {{ item.label }}
-            </span>
+            @if (sidebarState !== 'collapsed') {
+              <span
+                class="transition-opacity duration-150 ease-in-out"
+                [class.opacity-0]="sidebarState === 'collapsing'"
+                [class.opacity-100]="sidebarState === 'expanded'"
+              >
+                {{ item.label }}
+              </span>
+            }
           </a>
         }
       </div>
 
-      <!-- Bottom: User + Toggle -->
-      <div class="flex flex-col items-center gap-2 p-2 w-full">
-        <button class="w-10 h-10 rounded-full hover:bg-primary-contrast/10">👤</button>
-        <button
-          (click)="toggleCollapse()"
-          class="w-full h-10 flex items-center justify-center hover:bg-primary-contrast/10"
-        >
-          {{ isCollapsed ? '➡️' : '⬅️' }}
-        </button>
+      <!-- Bottom: Actions -->
+      <div class="flex flex-col gap-2 p-2 w-full">
+        @for (item of bottomMenuItems; track item.label) {
+          <button
+            (click)="item.action()"
+            class="flex items-center gap-2 px-2 py-2 rounded hover:bg-primary-contrast/10 transition-all duration-150 w-full"
+            [class.justify-center]="sidebarState === 'collapsed'"
+            [class.justify-start]="sidebarState !== 'collapsed'"
+          >
+            <span class="text-xl flex-shrink-0">{{ item.icon }}</span>
+            @if (sidebarState !== 'collapsed') {
+              <span
+                class="transition-opacity duration-150 ease-in-out"
+                [class.opacity-0]="sidebarState === 'collapsing'"
+                [class.opacity-100]="sidebarState === 'expanded'"
+              >
+                {{ item.label }}
+              </span>
+            }
+          </button>
+        }
       </div>
     </aside>
   `
@@ -79,16 +91,40 @@ export class PrimarySidebarComponent {
     { icon: '⚙️', label: 'Settings', route: '/dashboard/settings' }
   ];
 
+  bottomMenuItems: SidebarMenuItem[] = [
+    {
+      icon: '👤',
+      label: 'Profile',
+      action: () => {
+        console.log('Open profile modal');
+      }
+    },
+    {
+      icon: '⬅️',
+      label: 'Collapse',
+      action: () => this.toggleCollapse()
+    }
+  ];
+
   toggleCollapse() {
     if (this.isCollapsed) {
       this.sidebarState = SidebarState.Expanded;
       this.isCollapsed = false;
+      this.updateCollapseIcon();
     } else {
       this.sidebarState = SidebarState.Collapsing;
       this.isCollapsed = true;
+      this.updateCollapseIcon();
       setTimeout(() => {
         this.sidebarState = SidebarState.Collapsed;
       }, 150);
+    }
+  }
+
+  private updateCollapseIcon() {
+    const collapseItem = this.bottomMenuItems.find(i => i.label === 'Collapse');
+    if (collapseItem) {
+      collapseItem.icon = this.isCollapsed ? '➡️' : '⬅️';
     }
   }
 }
