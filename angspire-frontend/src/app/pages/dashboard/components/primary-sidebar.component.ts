@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { LogoLinkComponent } from '../../components/logo-link.component';
 import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 import { SidebarMenuItemComponent } from './sidebar-menu-item.component';
 
@@ -17,7 +16,6 @@ enum SidebarState {
   imports: [
     CommonModule,
     RouterModule,
-    LogoLinkComponent,
     SidebarMenuItemComponent
   ],
   template: `
@@ -26,15 +24,16 @@ enum SidebarState {
       [class.w-12]="isCollapsed"
       [class.w-48]="!isCollapsed"
     >
-      <!-- Top: Logo -->
-      <div class="flex flex-col h-12 p-2">
-        <app-logo-link
-          height="h-10"
+      <!-- Top: Logo (now a menu item) -->
+      <div
+        class="flex flex-col h-12 p-2"
+        [class.items-center]="isCollapsed"
+        [class.items-start]="!isCollapsed"
+      >
+        <app-sidebar-menu-item
+          [item]="logoItem"
           [collapsed]="isCollapsed"
-          [labelPosition]="'left'"
-          [justifyPosition]="'justify-left'"
-          [gap]="'gap-4'"
-          [label]="'Angspire'"
+          [state]="sidebarState"
         />
       </div>
 
@@ -74,6 +73,13 @@ export class PrimarySidebarComponent {
   SidebarState = SidebarState;
   sidebarState: SidebarState = SidebarState.Expanded;
   isCollapsed = false;
+
+  logoItem: SidebarMenuItem = {
+    imgSrc: '/angspire_icon_neg.png',
+    label: 'Angspire',
+    link: 'https://github.com/tbarracha/Angspire'
+  };
+
 
   menuItems: SidebarMenuItem[] = [
     { icon: '🏠', label: 'Home', route: '/dashboard/home' },

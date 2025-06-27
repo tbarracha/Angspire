@@ -34,7 +34,12 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
     }
 
     <ng-template #content>
-      <span class="text-xl flex-shrink-0">{{ item.icon }}</span>
+      @if (item.imgSrc) {
+        <img [src]="item.imgSrc" class="w-6 h-6 object-contain" />
+      } @else if (item.icon) {
+        <span class="text-xl flex-shrink-0">{{ item.icon }}</span>
+      }
+
       <span
         class="transition-all duration-150 ease-in-out overflow-hidden whitespace-nowrap"
         [class.opacity-0]="state !== 'expanded'"
