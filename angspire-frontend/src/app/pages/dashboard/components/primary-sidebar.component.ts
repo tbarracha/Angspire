@@ -4,24 +4,31 @@ import { RouterModule } from '@angular/router';
 import { LogoLinkComponent } from '../../components/logo-link.component';
 import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 
+enum SidebarState {
+  Expanded = 'expanded',
+  Collapsing = 'collapsing',
+  Collapsed = 'collapsed'
+}
+
 @Component({
   selector: 'app-primary-sidebar',
   standalone: true,
   imports: [CommonModule, RouterModule, LogoLinkComponent],
   template: `
     <aside
-      class="h-full bg-nav-bar text-nav-bar-contrast flex flex-col justify-between transition-all duration-300 ease-in-out"
+      class="h-full bg-nav-bar text-nav-bar-contrast flex flex-col justify-between transition-all duration-150 ease-in-out"
       [class.w-12]="isCollapsed"
       [class.w-48]="!isCollapsed"
     >
       <!-- Top: Logo -->
       <div class="flex flex-col h-12 p-2">
-        <app-logo-link height="h-10"
-        [collapsed]="isCollapsed"
-        [labelPosition]="'left'"
-        [justifyPosition]="'justify-left'"
-        [gap]="'gap-4'"
-        [label]="'Angspire'"
+        <app-logo-link
+          height="h-10"
+          [collapsed]="isCollapsed"
+          [labelPosition]="'left'"
+          [justifyPosition]="'justify-left'"
+          [gap]="'gap-4'"
+          [label]="'Angspire'"
         />
       </div>
 
@@ -30,13 +37,20 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
         @for (item of menuItems; track item.route) {
           <a
             [routerLink]="item.route"
-            class="flex items-center gap-2 px-2 py-2 rounded hover:bg-primary-contrast/10"
-            [ngClass]="isCollapsed ? 'justify-center' : 'justify-start'"
+            class="flex items-center gap-2 px-2 py-2 rounded hover:bg-primary-contrast/10 transition-all duration-150"
+            [class.justify-center]="sidebarState === 'collapsed'"
+            [class.justify-start]="sidebarState !== 'collapsed'"
           >
-            <span class="text-xl">{{ item.icon }}</span>
-            @if (!isCollapsed) {
-              <span class="whitespace-nowrap">{{ item.label }}</span>
-            }
+            <span class="text-xl flex-shrink-0">{{ item.icon }}</span>
+
+            <span
+              class="transition-opacity duration-150 ease-in-out overflow-hidden"
+              [class.opacity-0]="sidebarState !== 'expanded'"
+              [class.opacity-100]="sidebarState === 'expanded'"
+              *ngIf="sidebarState !== 'collapsed'"
+            >
+              {{ item.label }}
+            </span>
           </a>
         }
       </div>
@@ -55,6 +69,8 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
   `
 })
 export class PrimarySidebarComponent {
+  SidebarState = SidebarState;
+  sidebarState: SidebarState = SidebarState.Expanded;
   isCollapsed = false;
 
   menuItems: SidebarMenuItem[] = [
@@ -64,6 +80,15 @@ export class PrimarySidebarComponent {
   ];
 
   toggleCollapse() {
-    this.isCollapsed = !this.isCollapsed;
+    if (this.isCollapsed) {
+      this.sidebarState = SidebarState.Expanded;
+      this.isCollapsed = false;
+    } else {
+      this.sidebarState = SidebarState.Collapsing;
+      this.isCollapsed = true;
+      setTimeout(() => {
+        this.sidebarState = SidebarState.Collapsed;
+      }, 150);
+    }
   }
 }
