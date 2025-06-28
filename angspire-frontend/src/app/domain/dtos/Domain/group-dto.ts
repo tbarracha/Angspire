@@ -1,4 +1,5 @@
 // Auto-generated from GroupDto.cs
+
 export interface GroupDto {
   id: string;
   name: string;

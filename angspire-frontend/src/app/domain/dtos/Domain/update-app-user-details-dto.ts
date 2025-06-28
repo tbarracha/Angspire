@@ -1,4 +1,5 @@
 // Auto-generated from UpdateAppUserDetailsDto.cs
+
 export interface UpdateAppUserDetailsDto {
   id: string;
   userName: null | string;

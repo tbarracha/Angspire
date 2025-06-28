@@ -1,4 +1,5 @@
 // Auto-generated from GroupDetailedDto.cs
+
 export interface GroupDetailedDto {
   id: string;
   name: string;

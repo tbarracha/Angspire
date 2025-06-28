@@ -1,4 +1,5 @@
 // Auto-generated from UserGroupRoleDto.cs
+
 export interface UserGroupRoleDto {
   id: string;
   userId: string;

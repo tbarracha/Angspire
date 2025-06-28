@@ -1,4 +1,5 @@
 // Auto-generated from GroupWithMembersDto.cs
+
 export interface GroupWithMembersDto {
   id: string;
   name: string;

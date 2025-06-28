@@ -1,4 +1,5 @@
 // Auto-generated from UserGroupDto.cs
+
 export interface UserGroupDto {
   id: string;
   userId: string;
