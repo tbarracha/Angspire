@@ -1,3 +1,6 @@
+/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
 :root {
   /* npm run theme update */
   /* Theme START */
@@ -49,7 +52,9 @@
   /* Theme END */
 }
 
-@theme {
+@theme static {
+      --color-midnight: #121063;
+      
   /* Theme START */
   
   --color-background: var(--background);

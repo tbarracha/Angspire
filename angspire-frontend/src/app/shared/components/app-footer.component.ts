@@ -6,11 +6,11 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <footer class="h-6 w-full px-2 flex items-center justify-center bg-zinc-900 text-footer-contrast">
+    <footer class="h-6 w-full px-2 flex items-center justify-center bg-zinc-900 text-zinc-400">
       <p class="text-sm flex items-center space-x-1">
         <span>Made with</span>
         <svg
-          class="h-4 w-4"
+          class="h-4 w-4 text-red-800"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
