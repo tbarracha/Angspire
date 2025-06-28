@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { PrimarySidebarComponent } from './components/primary-sidebar.component';
 import { SecondarySidebarComponent } from './components/secondary-sidebar.component';
-import { AppStateService } from '../../shared/state/app-state.service';
+import { AppStateService } from '../../shared/app-state/app-state.service';
 
 @Component({
   selector: 'app-dashboard-layout',

@@ -7,8 +7,9 @@ import { HomePageComponent } from './pages/dashboard/pages/home/home-page.compon
 import { IamHomePageComponent } from './pages/dashboard/pages/iam/iam-home-page.component';
 import { ThemeHomePageComponent } from './pages/dashboard/pages/theme/theme-home-page.component';
 import { DocsHomePageComponent } from './pages/dashboard/pages/docs/docs-home-page.component';
-import { BubblePopperPageComponent } from './pages/dashboard/pages/home/bubble-popper-page/bubble-popper-page.component';
-import { TodoListPageComponent } from './pages/dashboard/pages/home/todo-list-page/todo-list-page.component';
+import { BubblePopperPageComponent } from './pages/dashboard/pages/home/home-bubble-popper-page/bubble-popper-page.component';
+import { TodoListPageComponent } from './pages/dashboard/pages/home/home-todo-list-page/todo-list-page.component';
+import { IamAccountsPageComponent } from './pages/dashboard/pages/iam/iam-accounts-page/iam-accounts-page.component';
 
 export const routes: Routes = [
   {
@@ -33,6 +34,7 @@ export const routes: Routes = [
       { path: 'home/todo', component: TodoListPageComponent },
       { path: 'home/bubble-pop', component: BubblePopperPageComponent },
       { path: 'iam', component: IamHomePageComponent },
+      { path: 'iam/accounts', component: IamAccountsPageComponent },
       { path: 'theme', component: ThemeHomePageComponent },
       { path: 'docs', component: DocsHomePageComponent },
       { path: '', redirectTo: 'home', pathMatch: 'full' }

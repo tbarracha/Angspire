@@ -2,7 +2,7 @@ import { Component, computed, inject, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from '../../../shared/components/sidebar.component';
 import { SidebarMenuItem } from '../../../shared/models/SidebarMenuItem';
-import { AppStateService } from '../../../shared/state/app-state.service';
+import { AppStateService } from '../../../shared/app-state/app-state.service';
 import { HOME_SIDEBAR_MENU } from '../pages/home/sidebar.config';
 import { IAM_SIDEBAR_MENU } from '../pages/iam/sidebar.config';
 import { THEME_SIDEBAR_MENU } from '../pages/theme/sidebar.config';

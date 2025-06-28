@@ -1,5 +1,7 @@
 // Auto-generated from RoleDto.cs
 
+import { PermissionDto } from "./permission-dto";
+
 export interface RoleDto {
   id: string;
   name: string;
