@@ -6,9 +6,10 @@ import { Observable } from 'rxjs';
 import {
   PermissionDto,
   PermissionDetailedDto
-} from '../dtos/Domain/permission-dto';
-import { PaginatedResult } from '../../core/models/paginated-result';
-import { environment } from '../../../environments/environment';
+} from '../dtos/permission-dto';
+import { PaginatedResult } from '../../../lib/models/paginated-result';
+import { environment } from '../../../../environments/environment';
+import { StateFlag } from '../../../lib/models/state-flag';
 
 @Injectable({ providedIn: 'root' })
 export class PermissionService {
@@ -19,7 +20,7 @@ export class PermissionService {
     return this.http.get<PermissionDetailedDto>(`${this.baseUrl}/${permissionId}`);
   }
 
-  list(state = 'ACTIVE', page = 1, pageSize = 20): Observable<PaginatedResult<PermissionDto>> {
+  list(state = StateFlag.Active, page = 1, pageSize = 20): Observable<PaginatedResult<PermissionDto>> {
     return this.http.get<PaginatedResult<PermissionDto>>(this.baseUrl, {
       params: { state, page, pageSize }
     });
@@ -39,7 +40,7 @@ export class PermissionService {
 
   searchByName(
     name: string,
-    state = 'ACTIVE',
+    state = StateFlag.Active,
     page = 1,
     pageSize = 20
   ): Observable<PaginatedResult<PermissionDto>> {
@@ -50,7 +51,7 @@ export class PermissionService {
 
   getForRole(
     roleId: string,
-    state = 'ACTIVE',
+    state = StateFlag.Active,
     page = 1,
     pageSize = 20
   ): Observable<PaginatedResult<PermissionDto>> {

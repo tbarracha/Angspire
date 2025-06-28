@@ -6,9 +6,10 @@ import { Observable } from 'rxjs';
 import {
   RoleDto,
   RoleDetailedDto
-} from '../dtos/Domain/role-dto';
-import { PaginatedResult } from '../../core/models/paginated-result';
-import { environment } from '../../../environments/environment';
+} from '../dtos/role-dto';
+import { PaginatedResult } from '../../../lib/models/paginated-result';
+import { environment } from '../../../../environments/environment';
+import { StateFlag } from '../../../lib/models/state-flag';
 
 @Injectable({ providedIn: 'root' })
 export class RoleService {
@@ -19,7 +20,7 @@ export class RoleService {
     return this.http.get<RoleDetailedDto>(`${this.baseUrl}/${roleId}`);
   }
 
-  list(state = 'ACTIVE', page = 1, pageSize = 20): Observable<PaginatedResult<RoleDto>> {
+  list(state = StateFlag.Active, page = 1, pageSize = 20): Observable<PaginatedResult<RoleDto>> {
     return this.http.get<PaginatedResult<RoleDto>>(this.baseUrl, {
       params: { state, page, pageSize }
     });
@@ -27,7 +28,7 @@ export class RoleService {
 
   listByGroup(
     groupId: string,
-    state = 'ACTIVE',
+    state = StateFlag.Active,
     page = 1,
     pageSize = 20
   ): Observable<PaginatedResult<RoleDto>> {
@@ -50,7 +51,7 @@ export class RoleService {
 
   searchByName(
     name: string,
-    state = 'ACTIVE',
+    state = StateFlag.Active,
     page = 1,
     pageSize = 20
   ): Observable<PaginatedResult<RoleDto>> {
@@ -61,7 +62,7 @@ export class RoleService {
 
   getForPermission(
     permissionId: string,
-    state = 'ACTIVE',
+    state = StateFlag.Active,
     page = 1,
     pageSize = 20
   ): Observable<PaginatedResult<RoleDto>> {

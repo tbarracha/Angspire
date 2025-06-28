@@ -3,12 +3,12 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { GroupDetailedDto } from '../dtos/Domain/group-detailed-dto';
-import { GroupDto } from '../dtos/Domain/group-dto';
-import { GroupWithMembersDto } from '../dtos/Domain/group-with-members-dto';
-import { UserGroupStateDetailedDto, UserGroupStateDto } from '../dtos/Domain/user-group-state-dto';
-import { PaginatedResult } from '../../core/models/paginated-result';
-import { environment } from '../../../environments/environment';
+import { GroupDetailedDto } from '../dtos/group-detailed-dto';
+import { GroupDto } from '../dtos/group-dto';
+import { GroupWithMembersDto } from '../dtos/group-with-members-dto';
+import { UserGroupStateDetailedDto, UserGroupStateDto } from '../dtos/user-group-state-dto';
+import { PaginatedResult } from '../../../lib/models/paginated-result';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class GroupService {

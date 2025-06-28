@@ -1,2 +1,25 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+
+:root {
+  /* npm run theme --update */
+  /* Theme START */
+  --background: #18181b;
+  --background-text: #fafafa;
+  
+  --foreground: #fafafa;
+  --foreground-text: #18181b;
+
+  --nav-bar: #18181b;
+  --nav-bar-secondary: #52525b;
+
+  --primary: #52525b;
+  --primary-contrast: #e4e4e7;
+
+  --secondary: #a1a1aa;
+  --secondary-contrast: #e4e4e7;
+  
+  --accent: #D80032;
+  --accent-contrast: #fafafa;
+  /* Theme END */
+}

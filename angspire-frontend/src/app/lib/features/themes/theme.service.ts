@@ -1,10 +1,17 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Theme } from './theme';
 
-export interface Theme {
-  name: string;
-  [key: string]: string;
-}
+/**
+ * ThemeService
+ *
+ * This service manages the color themes for the application.
+ * - Loads available themes from /themes.json.
+ * - Applies the selected theme by updating CSS variables on the document root.
+ * - Saves and restores the user’s preferred theme using localStorage.
+ * - Emits events whenever the active theme changes so components can react.
+ * - Supports smooth theme transitions and dark mode toggling.
+ */
 
 @Injectable({
   providedIn: 'root',
@@ -15,19 +22,18 @@ export class ThemeService {
   private currentTheme!: Theme;
   private activeIntervals: Map<string, number> = new Map();
 
-  themeChanged: EventEmitter<Theme> = new EventEmitter<Theme>();
+  static readonly themeChanged: EventEmitter<Theme> = new EventEmitter<Theme>();
 
   constructor(private http: HttpClient) {
     this.loadThemes();
   }
-
 
   loadThemes(): void {
     this.http.get<Theme[]>('/themes.json').subscribe({
       next: (themes) => {
         this.themes = themes;
         const savedTheme = this.loadCurrentTheme();
-  
+
         if (savedTheme) {
           setTimeout(() => {
             this.applyTheme(savedTheme, false);
@@ -36,7 +42,7 @@ export class ThemeService {
           this.applyTheme(themes[0], true);
           console.log('[ThemeService] Applied default theme:', themes[0].name);
         }
-  
+
         console.log('[ThemeService] Themes loaded:', this.themes);
       },
       error: (error) => {
@@ -44,7 +50,6 @@ export class ThemeService {
       },
     });
   }
-
 
   getAllThemes(): Theme[] {
     return this.themes;
@@ -63,7 +68,6 @@ export class ThemeService {
     this.applyThemeByName(themeName);
   }
 
-
   applyThemeByIndex(index: number): void {
     const theme = this.themes[index];
     if (theme) {
@@ -74,7 +78,7 @@ export class ThemeService {
   }
 
   applyThemeByName(themeName: string): void {
-    const theme = this.themes.find((t) => t.name === themeName);
+    const theme = this.themes.find((t) => t.name.toLowerCase() === themeName.toLowerCase());
     if (theme) {
       this.applyTheme(theme, true);
     } else {
@@ -82,7 +86,6 @@ export class ThemeService {
     }
   }
 
-  
   applyThemeSmoothByIndex(index: number, duration: number = 200): void {
     const theme = this.themes[index];
     if (theme) {
@@ -93,14 +96,13 @@ export class ThemeService {
   }
 
   applyThemeSmoothByName(themeName: string, duration: number = 200): void {
-    const theme = this.themes.find((t) => t.name === themeName);
+    const theme = this.themes.find((t) => t.name.toLowerCase() === themeName.toLowerCase());
     if (theme) {
       this.applyThemeSmooth(theme, duration);
     } else {
       console.error('[ThemeService] Theme not found:', themeName);
     }
   }
-
 
   private applyTheme(theme: Theme, save: boolean): void {
     if (!theme || (this.currentTheme && theme.name === this.currentTheme.name)) {
@@ -110,31 +112,27 @@ export class ThemeService {
 
     this.currentTheme = theme;
 
-    Object.keys(theme).forEach((key) => {
-      if (key !== 'name') {
-        const cssVariable = `--${this.camelToKebab(key)}`;
-        this.setCssVariable(cssVariable, theme[key]);
-      }
+    Object.entries(theme.colors).forEach(([key, value]) => {
+      const cssVariable = `--${this.camelToKebab(key)}`;
+      this.setCssVariable(cssVariable, value);
     });
 
     if (save) {
       this.saveCurrentTheme(theme);
     }
 
-    this.themeChanged.emit(this.currentTheme);
+    ThemeService.themeChanged.emit(this.currentTheme);
   }
 
   private applyThemeSmooth(theme: Theme, duration: number): void {
-    Object.keys(theme).forEach((key) => {
-      if (key !== 'name') {
-        const cssVariable = `--${this.camelToKebab(key)}`;
-        this.lerpCssVariable(cssVariable, theme[key], duration);
-      }
+    Object.entries(theme.colors).forEach(([key, value]) => {
+      const cssVariable = `--${this.camelToKebab(key)}`;
+      this.lerpCssVariable(cssVariable, value, duration);
     });
 
     this.currentTheme = theme;
     this.saveCurrentTheme(theme);
-    this.themeChanged.emit(this.currentTheme);
+    ThemeService.themeChanged.emit(this.currentTheme);
   }
 
   private setCssVariable(cssVariable: string, value: string): void {

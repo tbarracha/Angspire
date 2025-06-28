@@ -3,9 +3,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { VisibilityDto } from '../dtos/Domain/visibility-dto';
-import { PaginatedResult } from '../../core/models/paginated-result';
-import { environment } from '../../../environments/environment';
+import { VisibilityDto } from '../dtos/visibility-dto';
+import { PaginatedResult } from '../../../lib/models/paginated-result';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class VisibilityService {

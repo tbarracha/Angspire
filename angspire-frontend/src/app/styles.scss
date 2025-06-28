@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+:root {
+    /* node theme-sync update */
+    /* Theme START */
+    --header: #18181b;
+    --header-contrast: #FFFFFF;
+
+    --background: #FFFFFF;
+    --background-contrast: #18181b;
+
+    --nav-bar: #18181b;
+    --nav-bar-contrast: #FFFFFF;
+
+    --secondary-nav-bar: #3f3f46;
+    --secondary-nav-bar-contrast: #FFFFFF;
+
+    --footer: #18181b;
+    --footer-contrast: #FFFFFF;
+
+    --primary: #18181b;
+    --primary-contrast: #FFFFFF;
+
+    --secondary: #2B2B2B;
+    --secondary-contrast: #FFFFFF;
+
+    --highlight: #EDEDED;
+    --highlight-contrast: #18181b;
+
+    --accent: #D80032;
+    --accent-contrast: #FFFFFF;
+
+    --scrollbar-bg: #EDEDED;
+    --scrollbar-thumb: #2B2B2B;
+    --scrollbar-thumb-hover: #D80032;
+
+    --success: #84cc16;
+    --success-secondary: #d9f99d;
+
+    --info: #0ea5e9;
+    --info-secondary: #bae6fd;
+
+    --warning: #fbbf24;
+    --warning-secondary: #fde68a;
+
+    --danger: #ef4444;
+    --danger-secondary: #fecaca;
+    /* Theme END */
+}
+
+/* Global Slender Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 32px;
+  }
+  
+  /* Scrollbar Background Classes */
+  .sb-bg-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sb-bg-primary::-webkit-scrollbar-track {
+    background: var(--primary);
+  }
+  
+  .sb-bg-secondary::-webkit-scrollbar-track {
+    background: var(--secondary);
+  }
+  
+  .sb-bg-accent::-webkit-scrollbar-track {
+    background: var(--accent);
+  }
+  
+  /* Scrollbar Thumb Classes */
+  .sb-th-primary::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+  }
+  
+  .sb-th-secondary::-webkit-scrollbar-thumb {
+    background-color: var(--secondary);
+  }
+  
+  .sb-th-accent::-webkit-scrollbar-thumb {
+    background-color: var(--accent);
+  }
+  
+  /* Scrollbar Thumb Hover Classes (change hover colors) */
+  .sb-h-primary::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary);
+  }
+  
+  .sb-h-secondary::-webkit-scrollbar-thumb:hover {
+    background-color: var(--secondary);
+  }
+  
+  .sb-h-accent::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent);
+  }

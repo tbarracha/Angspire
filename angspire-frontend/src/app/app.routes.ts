@@ -3,7 +3,7 @@ import { AuthLayoutComponent } from './pages/auth/auth-layout.component';
 import { LoginPageComponent } from './pages/auth/login-page.component';
 import { RegisterPageComponent } from './pages/auth/register-page.component';
 import { DashboardLayoutComponent } from './pages/dashboard/dashboard-layout.component';
-import { HomePageComponent } from './pages/dashboard/pages/home/home-page';
+import { HomePageComponent } from './pages/dashboard/pages/home/home-page.component';
 import { IamHomePageComponent } from './pages/dashboard/pages/iam/iam-home-page.component';
 import { ThemeHomePageComponent } from './pages/dashboard/pages/theme/theme-home-page.component';
 import { DocsHomePageComponent } from './pages/dashboard/pages/docs/docs-home-page.component';

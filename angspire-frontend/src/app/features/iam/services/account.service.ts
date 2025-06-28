@@ -3,11 +3,11 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AppUserDetailedDto, AppUserDto } from '../dtos/Domain/app-user-dto';
-import { RoleDto } from '../dtos/Domain/role-dto';
-import { UpdateAppUserDetailsDto } from '../dtos/Domain/update-app-user-details-dto';
-import { PaginatedResult } from '../../core/models/paginated-result';
-import { environment } from '../../../environments/environment';
+import { AppUserDetailedDto, AppUserDto } from '../dtos/app-user-dto';
+import { RoleDto } from '../dtos/role-dto';
+import { UpdateAppUserDetailsDto } from '../dtos/update-app-user-details-dto';
+import { PaginatedResult } from '../../../lib/models/paginated-result';
+import { environment } from '../../../../environments/environment';
 
 
 @Injectable({ providedIn: 'root' })

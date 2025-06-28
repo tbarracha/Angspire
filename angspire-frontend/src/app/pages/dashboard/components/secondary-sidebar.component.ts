@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from './sidebar.component';
-import { SidebarMenuItem } from '../../models/SidebarMenuItem';
+import { SidebarMenuItem } from '../../../shared/models/SidebarMenuItem';
 import { Router } from '@angular/router';
 import { HOME_SIDEBAR_MENU } from '../pages/home/sidebar.config';
 import { IAM_SIDEBAR_MENU } from '../pages/iam/sidebar.config';

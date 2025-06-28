@@ -1,4 +1,4 @@
-import { SidebarMenuItem } from '../../../models/SidebarMenuItem';
+import { SidebarMenuItem } from '../../../../shared/models/SidebarMenuItem';
 
 export const HOME_SIDEBAR_MENU: SidebarMenuItem[] = [
   { icon: '🏠', label: 'Home', route: '/home' },

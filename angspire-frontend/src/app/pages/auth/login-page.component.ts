@@ -1,10 +1,10 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from '../../core/authentication/services/auth.service';
+import { AuthService } from '../../features/authentication/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { SocialLoginButtonsComponent } from "./social-login-buttons.component";
-import { LoginRequestDto } from '../../domain/dtos/Authentication/Requests/login-request-dto';
+import { LoginRequestDto } from '../../features/authentication/dtos/requests/login-request-dto';
 
 @Component({
   selector: 'app-login-page',

@@ -1,7 +1,7 @@
 import { Component, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from './sidebar.component';
-import { SidebarMenuItem } from '../../models/SidebarMenuItem';
+import { SidebarMenuItem } from '../../../shared/models/SidebarMenuItem';
 
 type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
 

@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { SidebarMenuItem } from '../../models/SidebarMenuItem';
-import { SidebarMenuItemComponent } from './sidebar-menu-item.component';
+import { SidebarMenuItem } from '../../../shared/models/SidebarMenuItem';
+import { SidebarMenuItemComponent } from '../../../shared/components/sidebar-menu-item.component';
 import { LogoLinkComponent } from '../../../shared/components/logo-link.component';
 
 export type SidebarVariant = 'primary' | 'secondary';

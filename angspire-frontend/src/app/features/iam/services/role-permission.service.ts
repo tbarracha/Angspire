@@ -3,10 +3,11 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PaginatedResult } from '../../core/models/paginated-result';
-import { RoleDetailedDto } from '../dtos/Domain/role-dto';
-import { RolePermissionDetailedDto, RolePermissionDto } from '../dtos/Domain/role-permission-dto';
-import { environment } from '../../../environments/environment';
+import { PaginatedResult } from '../../../lib/models/paginated-result';
+import { RoleDetailedDto } from '../dtos/role-dto';
+import { RolePermissionDetailedDto, RolePermissionDto } from '../dtos/role-permission-dto';
+import { environment } from '../../../../environments/environment';
+import { StateFlag } from '../../../lib/models/state-flag';
 
 @Injectable({ providedIn: 'root' })
 export class RolePermissionService {
@@ -27,7 +28,7 @@ export class RolePermissionService {
 
   listByRole(
     roleId: string,
-    state = 'ACTIVE',
+    state = StateFlag.Active,
     page = 1,
     pageSize = 20
   ): Observable<PaginatedResult<RolePermissionDto>> {
@@ -38,7 +39,7 @@ export class RolePermissionService {
 
   listByPermission(
     permissionId: string,
-    state = 'ACTIVE',
+    state = StateFlag.Active,
     page = 1,
     pageSize = 20
   ): Observable<PaginatedResult<RolePermissionDto>> {
