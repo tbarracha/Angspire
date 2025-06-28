@@ -1,8 +1,7 @@
 import { SidebarMenuItem } from '../../../../shared/models/SidebarMenuItem';
 
 export const HOME_SIDEBAR_MENU: SidebarMenuItem[] = [
-  { icon: '🏠', label: 'Home', route: '/home' },
-  { icon: '📁', label: 'Projects', route: '/home/projects' },
-  { icon: '🗓️', label: 'Calendar', route: '/home/calendar' },
-  { icon: '🔔', label: 'Notifications', route: '/home/notifications' }
+  { icon: '🏠', label: 'Intro', route: '/home' },
+  { icon: '📝', label: 'To-Do List', route: '/home/todo' },
+  { icon: '🔵', label: 'Bubble Pop', route: '/home/bubble-pop' }
 ];

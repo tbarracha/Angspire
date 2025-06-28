@@ -2,78 +2,120 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder, FormGroup, Validators, ReactiveFormsModule,
-  AbstractControlOptions, ValidatorFn
+  AbstractControlOptions, ValidatorFn, FormControl
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../features/authentication/auth.service';
 import { SocialLoginButtonsComponent } from './social-login-buttons.component';
 import { RegisterRequestDto } from '../../features/authentication/dtos/requests/register-request-dto';
+import { InputComponent } from '../../shared/components/input.component';
+import { ButtonComponent } from "../../shared/components/button.component";
 
 @Component({
   selector: 'app-register-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, SocialLoginButtonsComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, SocialLoginButtonsComponent, InputComponent, ButtonComponent],
   template: `
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
       <h2 class="text-2xl font-bold text-center">Register</h2>
 
       <!-- Step 1 -->
       <ng-container *ngIf="step === 1">
-        <!-- Email -->
-        <div>
-          <label for="email" class="block text-sm font-medium mb-1">Email</label>
-          <input id="email" type="email" formControlName="email" placeholder="you@example.com"
-            class="w-full p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent" />
-          <div *ngIf="showError('email')" class="text-red-500 text-sm mt-1">Valid email is required.</div>
-        </div>
+        <div class="flex flex-col gap-4">
+          <input-component
+            id="email"
+            label="Email"
+            type="email"
+            [value]="emailControl.value"
+            (valueChange)="onInputChange(emailControl, $event)"
+            placeholder="you@example.com"
+            [errorText]="getEmailErrorText()"
+            autocomplete="email"
+          ></input-component>
 
-        <!-- Password -->
-        <div>
-          <label for="password" class="block text-sm font-medium mb-1">Password</label>
-          <input id="password" type="password" formControlName="password" placeholder="Password"
-            class="w-full p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent" />
-          <div *ngIf="showError('password')" class="text-red-500 text-sm mt-1">Password is required.</div>
-        </div>
+          <input-component
+            id="password"
+            label="Password"
+            type="password"
+            [value]="passwordControl.value"
+            (valueChange)="onInputChange(passwordControl, $event)"
+            placeholder="Password"
+            [errorText]="getPasswordErrorText()"
+            autocomplete="new-password"
+          ></input-component>
 
-        <!-- Confirm Password -->
-        <div>
-          <label for="confirmPassword" class="block text-sm font-medium mb-1">Confirm Password</label>
-          <input id="confirmPassword" type="password" formControlName="confirmPassword" placeholder="Confirm password"
-            class="w-full p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent" />
-          <div *ngIf="passwordMismatch()" class="text-red-500 text-sm mt-1">Passwords must match.</div>
+          <input-component
+            id="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            [value]="confirmPasswordControl.value"
+            (valueChange)="onInputChange(confirmPasswordControl, $event)"
+            placeholder="Confirm password"
+            [errorText]="getConfirmPasswordErrorText()"
+            autocomplete="new-password"
+          ></input-component>
         </div>
-
-        <button type="button" (click)="goToStep(2)" [disabled]="stepOneInvalid()" class="w-full px-4 py-2 rounded bg-accent text-highlight font-semibold hover:underline transition">
-          Continue
-        </button>
+        <div class="mt-4">
+          <app-button
+            type="accent"
+            styleIdle="filled"
+            styleHover="outlined"
+            htmlType="button"
+            [disabled]="stepOneInvalid()"
+            class="w-full"
+            (click)="goToStep(2)">
+            Continue
+          </app-button>
+        </div>
       </ng-container>
 
       <!-- Step 2 -->
       <ng-container *ngIf="step === 2">
-        <!-- First Name -->
-        <div>
-          <label for="name" class="block text-sm font-medium mb-1">First Name</label>
-          <input id="name" type="text" formControlName="name" placeholder="First Name"
-            class="w-full p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent" />
+        <div class="flex flex-col gap-4">
+          <input-component
+            id="name"
+            label="First Name"
+            type="text"
+            [value]="firstNameControl.value"
+            (valueChange)="onInputChange(firstNameControl, $event)"
+            placeholder="First Name"
+            autocomplete="given-name"
+          ></input-component>
+
+          <input-component
+            id="lastName"
+            label="Last Name"
+            type="text"
+            [value]="lastNameControl.value"
+            (valueChange)="onInputChange(lastNameControl, $event)"
+            placeholder="Last Name"
+            autocomplete="family-name"
+          ></input-component>
+
+          <div *ngIf="registerError" class="text-error text-sm text-center">{{ registerError }}</div>
         </div>
 
-        <!-- Last Name -->
-        <div>
-          <label for="lastName" class="block text-sm font-medium mb-1">Last Name</label>
-          <input id="lastName" type="text" formControlName="lastName" placeholder="Last Name"
-            class="w-full p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent" />
+        <div class="flex flex-col gap-2">
+          <app-button
+            type="accent"
+            styleIdle="filled"
+            styleHover="outlined"
+            htmlType="submit"
+            [disabled]="registerForm.invalid"
+            class="w-full">
+            Register
+          </app-button>
+
+          <app-button
+            type="secondary"
+            styleIdle="filled"
+            styleHover="outlined"
+            htmlType="button"
+            class="w-full"
+            (click)="goToStep(1)">
+            Back
+          </app-button>
         </div>
-
-        <!-- Error -->
-        <div *ngIf="registerError" class="text-red-500 text-sm text-center">{{ registerError }}</div>
-
-        <!-- Submit -->
-        <button type="submit" [disabled]="registerForm.invalid" class="w-full px-4 py-2 rounded bg-accent text-highlight font-semibold hover:underline transition">
-          Register
-        </button>
-        <button type="button" (click)="goToStep(1)" class="w-full px-4 py-2 rounded bg-gray-300 text-black font-semibold hover:bg-gray-400 transition">
-          Back
-        </button>
       </ng-container>
 
       <!-- Switch -->
@@ -114,26 +156,64 @@ export class RegisterPageComponent {
     } as AbstractControlOptions);
   }
 
+  get emailControl(): FormControl {
+    return this.registerForm.get('email') as FormControl;
+  }
+  get passwordControl(): FormControl {
+    return this.registerForm.get('password') as FormControl;
+  }
+  get confirmPasswordControl(): FormControl {
+    return this.registerForm.get('confirmPassword') as FormControl;
+  }
+  get firstNameControl(): FormControl {
+    return this.registerForm.get('name') as FormControl;
+  }
+  get lastNameControl(): FormControl {
+    return this.registerForm.get('lastName') as FormControl;
+  }
+
+  onInputChange(control: FormControl, value: string) {
+    control.setValue(value);
+    control.markAsTouched();
+    control.updateValueAndValidity();
+  }
+
   goToStep(step: 1 | 2) {
     this.step = step;
   }
 
   stepOneInvalid(): boolean {
     return (
-      this.registerForm.get('email')?.invalid ||
-      this.registerForm.get('password')?.invalid ||
-      this.registerForm.get('confirmPassword')?.invalid ||
+      this.emailControl.invalid ||
+      this.passwordControl.invalid ||
+      this.confirmPasswordControl.invalid ||
       this.passwordMismatch()
     );
   }
 
-  showError(controlName: string): boolean {
-    const control = this.registerForm.get(controlName);
-    return !!control && control.invalid && control.touched;
+  getEmailErrorText(): string {
+    const c = this.emailControl;
+    if (!c.touched && !c.dirty) return '';
+    if (c.hasError('required')) return 'Email is required.';
+    if (c.hasError('email')) return 'Enter a valid email address.';
+    return '';
+  }
+  getPasswordErrorText(): string {
+    const c = this.passwordControl;
+    if (!c.touched && !c.dirty) return '';
+    if (c.hasError('required')) return 'Password is required.';
+    return '';
+  }
+  getConfirmPasswordErrorText(): string {
+    const c = this.confirmPasswordControl;
+    if (!c.touched && !c.dirty) return '';
+    if (c.hasError('required')) return 'Confirm your password.';
+    if (this.passwordMismatch()) return 'Passwords must match.';
+    return '';
   }
 
   passwordMismatch(): boolean {
-    return this.registerForm.hasError('mismatch') && !!this.registerForm.get('confirmPassword')?.touched;
+    return this.registerForm.hasError('mismatch') && !!this.confirmPasswordControl.touched;
   }
 
   private passwordMatchValidator(group: FormGroup): { [key: string]: boolean } | null {
@@ -143,7 +223,15 @@ export class RegisterPageComponent {
   }
 
   onSubmit(): void {
-    if (this.registerForm.invalid) return;
+    if (this.registerForm.invalid) {
+      this.emailControl.markAsTouched();
+      this.passwordControl.markAsTouched();
+      this.confirmPasswordControl.markAsTouched();
+      this.emailControl.updateValueAndValidity();
+      this.passwordControl.updateValueAndValidity();
+      this.confirmPasswordControl.updateValueAndValidity();
+      return;
+    }
 
     const { email, password, name, lastName } = this.registerForm.value;
     const dto: RegisterRequestDto = {

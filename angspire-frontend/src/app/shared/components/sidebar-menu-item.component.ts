@@ -11,7 +11,7 @@ import { SidebarMenuItem } from '../models/SidebarMenuItem';
     @if (item.route) {
       <a
         [routerLink]="item.route"
-        class="flex items-center px-2 py-2 rounded hover:bg-primary-contrast/10 w-full"
+        class="flex items-center p-2 rounded hover:bg-primary/25 w-full"
         [class.justify-center]="isCollapsed"
         [class.justify-start]="!isCollapsed"
         [class.gap-2]="!isCollapsed"
@@ -22,7 +22,7 @@ import { SidebarMenuItem } from '../models/SidebarMenuItem';
       <button
         type="button"
         (click)="item.action?.()"
-        class="flex items-center px-2 py-2 rounded hover:bg-primary-contrast/10 w-full"
+        class="flex items-center p-2 rounded hover:bg-primary/25 w-full"
         [class.justify-center]="isCollapsed"
         [class.justify-start]="!isCollapsed"
         [class.gap-2]="!isCollapsed"

@@ -15,6 +15,7 @@ import { RouterOutlet } from '@angular/router';
           <img src="/angspire_icon_neg.png" alt="angspire_icon" class="h-full aspect-auto drop-shadow-lg" />
         </a>
         <h1 class="text-4xl font-bold text-center">Welcome to Angspire</h1>
+        <!-- <app-button-testing /> -->
       </div>
 
       <!-- Right: Routed Auth Content -->

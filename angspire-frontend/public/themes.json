@@ -33,7 +33,13 @@
       "input-text": "#18181b",
       "input-placeholder": "#a1a1aa",
       "scrollbar-track": "#f4f4f5",
-      "scrollbar-thumb": "#c4c4c4"
+      "scrollbar-thumb": "#c4c4c4",
+      "navbar-primary": "#18181b",
+      "navbar-primary-contrast": "#fafafa",
+      "navbar-secondary": "#f4f4f5",
+      "navbar-secondary-contrast": "#18181b",
+      "muted": "#a1a1aa",
+      "muted-contrast": "#18181b"
     }
   },
   {
@@ -70,7 +76,13 @@
       "input-text": "#18181b",
       "input-placeholder": "#a1a1aa",
       "scrollbar-track": "#f4f4f5",
-      "scrollbar-thumb": "#c4c4c4"
+      "scrollbar-thumb": "#c4c4c4",
+      "navbar-primary": "#18181b",
+      "navbar-primary-contrast": "#fafafa",
+      "navbar-secondary": "#f4f4f5",
+      "navbar-secondary-contrast": "#18181b",
+      "muted": "#a1a1aa",
+      "muted-contrast": "#18181b"
     }
   }
 ]

@@ -1,58 +1,64 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarComponent } from './sidebar.component';
+import { SidebarComponent } from '../../../shared/components/sidebar.component';
 import { SidebarMenuItem } from '../../../shared/models/SidebarMenuItem';
-import { Router } from '@angular/router';
+import { AppStateService } from '../../../shared/state/app-state.service';
 import { HOME_SIDEBAR_MENU } from '../pages/home/sidebar.config';
 import { IAM_SIDEBAR_MENU } from '../pages/iam/sidebar.config';
 import { THEME_SIDEBAR_MENU } from '../pages/theme/sidebar.config';
 import { DOCS_SIDEBAR_MENU } from '../pages/docs/sidebar.config';
-
-type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
 
 @Component({
   selector: 'app-secondary-sidebar',
   standalone: true,
   imports: [CommonModule, SidebarComponent],
   template: `
-    <app-sidebar
-      [menuItems]="menuItems()"
-      [bottomMenuItems]="bottomMenuItems"
-      [isCollapsed]="isCollapsed"
-      variant="secondary"
-      [expandedWidth]="'13rem'"
-      [collapsedWidth]="'3.25rem'"
-    />
+    <div class="h-full bg-navbar-secondary text-navbar-secondary-contrast">
+      <app-sidebar
+        [menuItems]="menuItems()"
+        [bottomMenuItems]="bottomMenuItems"
+        [isCollapsed]="isCollapsed"
+        variant="secondary"
+        [expandedWidth]="'13rem'"
+        [collapsedWidth]="'3.5rem'"
+      />
+    </div>
   `
 })
-export class SecondarySidebarComponent {
-  sidebarState: SidebarState = 'expanded';
-  isCollapsed = false;
+export class SecondarySidebarComponent implements AfterViewInit {
+  private appStateService = inject(AppStateService);
 
-  private router = inject(Router);
+  get isCollapsed() {
+    return this.appStateService.state().dashboard.isSecondarySidebarCollapsed;
+  }
+  set isCollapsed(value: boolean) {
+    this.appStateService.setSecondarySidebarCollapsed(value);
+  }
 
   readonly menuItems = computed((): SidebarMenuItem[] => {
-    const url = this.router.url;
-    
-    if (url.startsWith('/iam')) return IAM_SIDEBAR_MENU;
-    if (url.startsWith('/theme')) return THEME_SIDEBAR_MENU;
-    if (url.startsWith('/docs')) return DOCS_SIDEBAR_MENU;
-    return HOME_SIDEBAR_MENU;
+    switch (this.appStateService.state().dashboard.currentSection) {
+      case 'iam':   return IAM_SIDEBAR_MENU;
+      case 'theme': return THEME_SIDEBAR_MENU;
+      case 'docs':  return DOCS_SIDEBAR_MENU;
+      default:      return HOME_SIDEBAR_MENU;
+    }
   });
 
-  bottomMenuItems: SidebarMenuItem[] = [];
+  bottomMenuItems: SidebarMenuItem[] = [
+    {
+      icon: '⬅️',
+      label: 'Collapse',
+      isCollapseToggle: true,
+      action: () => this.toggleCollapse()
+    }
+  ];
+
+  ngAfterViewInit() {
+    this.updateCollapseIcon();
+  }
 
   toggleCollapse() {
-    if (this.isCollapsed) {
-      this.sidebarState = 'expanded';
-      this.isCollapsed = false;
-    } else {
-      this.sidebarState = 'collapsing';
-      this.isCollapsed = true;
-      setTimeout(() => {
-        this.sidebarState = 'collapsed';
-      }, 150);
-    }
+    this.isCollapsed = !this.isCollapsed;
     this.updateCollapseIcon();
   }
 

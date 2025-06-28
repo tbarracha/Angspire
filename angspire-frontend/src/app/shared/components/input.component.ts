@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
         [id]="id"
         [type]="showPassword ? 'text' : type"
         [placeholder]="placeholder"
-        class="w-full p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm bg-input-background text-input-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent pr-12"
+        class="w-full p-3 rounded-md border border-primary placeholder-input-placeholder shadow-sm bg-input-background text-input-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent pr-12"
         [attr.autocomplete]="autocomplete"
         [value]="value"
         (input)="onInput($event)"
@@ -30,21 +30,11 @@ import { CommonModule } from '@angular/common';
       >
         <ng-container *ngIf="showPassword; else eyeClosed">
           <!-- Eye Icon SVG -->
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m644-428-58-58q9-47-27-88t-93-32l-58-58q17-8 34.5-12t37.5-4q75 0 127.5 52.5T660-500q0 20-4 37.5T644-428Zm128 126-58-56q38-29 67.5-63.5T832-500q-50-101-143.5-160.5T480-720q-29 0-57 4t-55 12l-62-62q41-17 84-25.5t90-8.5q151 0 269 83.5T920-500q-23 59-60.5 109.5T772-302Zm20 246L624-222q-35 11-70.5 16.5T480-200q-151 0-269-83.5T40-500q21-53 53-98.5t73-81.5L56-792l56-56 736 736-56 56ZM222-624q-29 26-53 57t-41 67q50 101 143.5 160.5T480-280q20 0 39-2.5t39-5.5l-36-38q-11 3-21 4.5t-21 1.5q-75 0-127.5-52.5T300-500q0-11 1.5-21t4.5-21l-84-82Zm319 93Zm-151 75Z"/></svg>
         </ng-container>
         <ng-template #eyeClosed>
-          <!-- Eye-off Icon SVG -->
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.99 9.99 0 012.463-4.028M21 21l-6-6M9.88 9.88a3 3 0 104.24 4.24" />
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15 12a3 3 0 01-2.197 2.897M6.18 6.18l-1.39-1.39M17.82 17.82l1.39 1.39" />
-          </svg>
+            <!-- Eye-off Icon SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-300Zm0 220q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280Z"/></svg>
         </ng-template>
       </button>
       <div *ngIf="errorText" class="text-error text-sm mt-1">

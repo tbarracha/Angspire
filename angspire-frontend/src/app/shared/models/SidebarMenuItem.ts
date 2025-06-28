@@ -4,5 +4,6 @@ export interface SidebarMenuItem {
   label: string;               // Label text
   route?: string;              // Angular routerLink
   link?: string;               // External URL
+  isCollapseToggle?: boolean;
   action?: () => void;         // Optional action
 }

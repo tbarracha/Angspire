@@ -1,29 +1,37 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarComponent } from './sidebar.component';
+import { SidebarComponent } from '../../../shared/components/sidebar.component';
 import { SidebarMenuItem } from '../../../shared/models/SidebarMenuItem';
-
-type SidebarState = 'expanded' | 'collapsing' | 'collapsed';
+import { AppStateService } from '../../../shared/state/app-state.service';
 
 @Component({
   selector: 'app-primary-sidebar',
   standalone: true,
   imports: [CommonModule, SidebarComponent],
   template: `
-    <app-sidebar
-      [logoItem]="logoItem"
-      [menuItems]="menuItems"
-      [bottomMenuItems]="bottomMenuItems"
-      [isCollapsed]="isCollapsed"
-      variant="primary"
-      [expandedWidth]="'12rem'"
-      [collapsedWidth]="'3rem'"
-    />
+    <div class="h-full bg-navbar-primary text-navbar-primary-contrast">
+      <app-sidebar
+        [logoItem]="logoItem"
+        [menuItems]="menuItems"
+        [bottomMenuItems]="bottomMenuItems"
+        [isCollapsed]="isCollapsed"
+        variant="primary"
+        [expandedWidth]="'10rem'"
+        [collapsedWidth]="'3.5rem'"
+      />
+    </div>
   `
 })
 export class PrimarySidebarComponent implements AfterViewInit {
-  sidebarState: SidebarState = 'collapsed';
-  isCollapsed = true;
+  private appStateService = inject(AppStateService);
+
+  // Use state service for collapse
+  get isCollapsed() {
+    return this.appStateService.state().dashboard.isPrimarySidebarCollapsed;
+  }
+  set isCollapsed(value: boolean) {
+    this.appStateService.setPrimarySidebarCollapsed(value);
+  }
 
   logoItem: SidebarMenuItem = {
     imgSrc: '/angspire_icon_neg.png',
@@ -40,16 +48,17 @@ export class PrimarySidebarComponent implements AfterViewInit {
 
   bottomMenuItems: SidebarMenuItem[] = [
     {
-      icon: '➡️',
-      label: 'Collapse',
-      action: () => this.toggleCollapse()
-    },
-    {
       icon: '👤',
       label: 'Profile',
       action: () => console.log('Open profile modal')
     },
-    { icon: '⚙️', label: 'Settings', route: '/dashboard/settings' }
+    { icon: '⚙️', label: 'Settings', route: '/dashboard/settings' },
+    {
+      icon: '➡️',
+      label: 'Collapse',
+      isCollapseToggle: true,
+      action: () => this.toggleCollapse()
+    }
   ];
 
   ngAfterViewInit() {
@@ -57,23 +66,15 @@ export class PrimarySidebarComponent implements AfterViewInit {
   }
 
   toggleCollapse() {
-    if (this.isCollapsed) {
-      this.sidebarState = 'expanded';
-      this.isCollapsed = false;
-    } else {
-      this.sidebarState = 'collapsing';
-      this.isCollapsed = true;
-      setTimeout(() => {
-        this.sidebarState = 'collapsed';
-      }, 150);
-    }
+    this.isCollapsed = !this.isCollapsed;
     this.updateCollapseIcon();
   }
 
   private updateCollapseIcon() {
-    const collapseItem = this.bottomMenuItems.find(i => i.label === 'Collapse');
-    if (collapseItem) {
-      collapseItem.icon = this.isCollapsed ? '➡️' : '⬅️';
+    for (const item of this.bottomMenuItems) {
+      if (item.isCollapseToggle) {
+        item.icon = this.isCollapsed ? '➡️' : '⬅️';
+      }
     }
   }
 }

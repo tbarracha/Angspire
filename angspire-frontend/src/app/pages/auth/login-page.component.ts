@@ -1,56 +1,63 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { AuthService } from '../../features/authentication/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { SocialLoginButtonsComponent } from "./social-login-buttons.component";
 import { LoginRequestDto } from '../../features/authentication/dtos/requests/login-request-dto';
+import { InputComponent } from '../../shared/components/input.component';
+import { ButtonComponent } from "../../shared/components/button.component";
 
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, SocialLoginButtonsComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, SocialLoginButtonsComponent, InputComponent, ButtonComponent],
   template: `
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
       <h2 class="text-2xl font-bold text-center">Login</h2>
 
-      <!-- Email -->
-      <div>
-        <label for="email" class="block text-sm font-medium mb-1">Email</label>
-        <input
+      <!-- Inputs -->
+      <div class="flex flex-col gap-4">
+        <input-component
           id="email"
+          label="Email"
           type="email"
-          formControlName="email"
-          class="w-full p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+          [value]="emailControl.value"
+          (valueChange)="onInputChange(emailControl, $event)"
           placeholder="you@example.com"
-        />
-        <div *ngIf="showError('email')" class="text-red-500 text-sm mt-1">Valid email is required.</div>
-      </div>
+          [errorText]="getEmailErrorText()"
+          autocomplete="email"
+        ></input-component>
 
-      <!-- Password -->
-      <div>
-        <label for="password" class="block text-sm font-medium mb-1">Password</label>
-        <input
+        <input-component
           id="password"
+          label="Password"
           type="password"
-          formControlName="password"
-          class="w-full p-3 rounded-md border border-primary placeholder-text-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+          [value]="passwordControl.value"
+          (valueChange)="onInputChange(passwordControl, $event)"
           placeholder="Password"
-        />
-        <div *ngIf="showError('password')" class="text-red-500 text-sm mt-1">Password is required.</div>
+          [errorText]="getPasswordErrorText()"
+          autocomplete="current-password"
+        ></input-component>
       </div>
 
-      <!-- Error -->
-      <div *ngIf="loginError" class="text-red-500 text-sm text-center">{{ loginError }}</div>
+      <!-- Error Message -->
+      <div *ngIf="loginError" class="text-error text-sm text-center">{{ loginError }}</div>
 
-      <!-- Submit -->
-      <button
-        type="submit"
-        [disabled]="loginForm.invalid"
-        class="w-full px-4 py-2 rounded bg-accent text-highlight font-semibold hover:underline transition"
-      >
-        Login
-      </button>
+      <!-- Submit Button -->
+      <div>
+        <app-button
+          type="accent"
+          styleIdle="filled"
+          styleHover="outlined"
+          htmlType="submit"
+          [disabled]="loginForm.invalid"
+          class="w-full"
+        >
+          Login
+        </app-button>
+
+      </div>
 
       <!-- Switch -->
       <p class="text-sm text-center">
@@ -81,13 +88,42 @@ export class LoginPageComponent {
     });
   }
 
-  showError(controlName: string): boolean {
-    const control = this.loginForm.get(controlName);
-    return !!control && control.invalid && control.touched;
+  get emailControl(): FormControl {
+    return this.loginForm.get('email') as FormControl;
+  }
+  get passwordControl(): FormControl {
+    return this.loginForm.get('password') as FormControl;
+  }
+
+  onInputChange(control: FormControl, value: string) {
+    control.setValue(value);
+    control.markAsTouched();
+    control.updateValueAndValidity();
+  }
+
+  getEmailErrorText(): string {
+    const control = this.emailControl;
+    if (!control.touched && !control.dirty) return '';
+    if (control.hasError('required')) return 'Email is required.';
+    if (control.hasError('email')) return 'Enter a valid email address.';
+    return '';
+  }
+
+  getPasswordErrorText(): string {
+    const control = this.passwordControl;
+    if (!control.touched && !control.dirty) return '';
+    if (control.hasError('required')) return 'Password is required.';
+    return '';
   }
 
   onSubmit(): void {
-    if (this.loginForm.invalid) return;
+    if (this.loginForm.invalid) {
+      this.emailControl.markAsTouched();
+      this.passwordControl.markAsTouched();
+      this.emailControl.updateValueAndValidity();
+      this.passwordControl.updateValueAndValidity();
+      return;
+    }
 
     const dto: LoginRequestDto = this.loginForm.value;
     this.loginError = '';
@@ -95,7 +131,7 @@ export class LoginPageComponent {
     this.authService.login(dto).subscribe({
       next: () => {
         this.loggedIn.emit();
-        this.router.navigate(['/home']); // or your post-login route
+        this.router.navigate(['/home']);
       },
       error: (err) => {
         console.error('Login error:', err);
