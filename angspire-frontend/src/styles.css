@@ -1,25 +1,102 @@
-/* You can add global styles to this file, and also import other style files */
-@import "tailwindcss";
-
 :root {
-  /* npm run theme --update */
+  /* npm run theme update */
   /* Theme START */
-  --background: #18181b;
-  --background-text: #fafafa;
-  
-  --foreground: #fafafa;
-  --foreground-text: #18181b;
+  --background: #fafafa;
+  --background-text: #09090b;
 
-  --nav-bar: #18181b;
-  --nav-bar-secondary: #52525b;
+  --foreground: #18181b;
+  --foreground-text: #fafafa;
 
   --primary: #52525b;
   --primary-contrast: #e4e4e7;
 
   --secondary: #a1a1aa;
   --secondary-contrast: #e4e4e7;
-  
+
   --accent: #D80032;
   --accent-contrast: #fafafa;
+
+  --card: #fff;
+  --card-contrast: #18181b;
+
+  --border: #e5e7eb;
+  --divider: #e4e4e7;
+
+  --highlight: #f4f4f5;
+  --highlight-contrast: #18181b;
+  --hover: #f1f5f9;
+  --active: #e0e7ef;
+
+  --success: #10b981;
+  --success-contrast: #fff;
+
+  --warning: #f59e42;
+  --warning-contrast: #18181b;
+
+  --error: #ef4444;
+  --error-contrast: #fff;
+  
+  --info: #2563eb;
+  --info-contrast: #fff;
+
+  --input-background: #fff;
+  --input-border: #d4d4d8;
+  --input-text: #18181b;
+  --input-placeholder: #a1a1aa;
+
+  --scrollbar-track: #f4f4f5;
+  --scrollbar-thumb: #c4c4c4;
+  /* Theme END */
+}
+
+@theme {
+  /* Theme START */
+  
+  --color-background: var(--background);
+  --color-background-text: var(--background-text);
+  
+  --color-foreground: var(--foreground);
+  --color-foreground-text: var(--foreground-text);
+  
+  --color-primary: var(--primary);
+  --color-primary-contrast: var(--primary-contrast);
+  
+  --color-secondary: var(--secondary);
+  --color-secondary-contrast: var(--secondary-contrast);
+  
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  
+  --color-card: var(--card);
+  --color-card-contrast: var(--card-contrast);
+  
+  --color-border: var(--border);
+  --color-divider: var(--divider);
+  
+  --color-highlight: var(--highlight);
+  --color-highlight-contrast: var(--highlight-contrast);
+  --color-hover: var(--hover);
+  --color-active: var(--active);
+  
+  --color-success: var(--success);
+  --color-success-contrast: var(--success-contrast);
+  
+  --color-warning: var(--warning);
+  --color-warning-contrast: var(--warning-contrast);
+  
+  --color-error: var(--error);
+  --color-error-contrast: var(--error-contrast);
+  
+  --color-info: var(--info);
+  --color-info-contrast: var(--info-contrast);
+  
+  --color-input-background: var(--input-background);
+  --color-input-border: var(--input-border);
+  --color-input-text: var(--input-text);
+  --color-input-placeholder: var(--input-placeholder);
+  
+  --color-scrollbar-track: var(--scrollbar-track);
+  --color-scrollbar-thumb: var(--scrollbar-thumb);
+  
   /* Theme END */
 }

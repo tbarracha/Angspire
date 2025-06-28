@@ -7,8 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "theme": "node scripts/theme-sync.js",
-    "generate-imports": "node scripts/generate-imports.js"
+    "theme": "node src/app/lib/scripts/theme-sync.js",
+    "generate-imports": "node src/app/lib/scripts/generate-imports.js"
   },
   "private": true,
   "dependencies": {
