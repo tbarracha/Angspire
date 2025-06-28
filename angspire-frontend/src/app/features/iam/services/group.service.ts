@@ -1,4 +1,4 @@
-// src/app/pages/iam/services/group.service.ts
+// group.service.ts
 
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';

@@ -1,4 +1,4 @@
-// src/app/pages/iam/services/permission.service.ts
+// permission.service.ts
 
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
