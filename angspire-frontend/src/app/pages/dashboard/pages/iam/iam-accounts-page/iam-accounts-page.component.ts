@@ -2,9 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppUserDto } from '../../../../../features/iam/dtos/app-user-dto';
-import { TableGridComponent, TableGridConfig } from '../../../../../shared/components/table-component/table-grid.component';
+import {
+  TableGridComponent,
+  TableGridConfig,
+} from '../../../../../shared/components/table-component/table-grid.component';
 import { IamServiceCollection } from '../../../../../features/iam/services/iam-service-collection';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 
 export interface IamAccountRow extends AppUserDto {
   primaryRoleName: string | null;
@@ -24,17 +27,30 @@ export interface IamAccountRow extends AppUserDto {
         </div>
         <!-- Search -->
         <form class="flex gap-2" (submit)="onSearch(); $event.preventDefault()">
-          <input [(ngModel)]="search.firstName" name="firstName"
+          <input
+            [(ngModel)]="search.firstName"
+            name="firstName"
             class="rounded px-3 py-2 border border-input bg-input-background text-input-text w-36"
-            placeholder="First Name" autocomplete="off" />
-          <input [(ngModel)]="search.lastName" name="lastName"
+            placeholder="First Name"
+            autocomplete="off" />
+          <input
+            [(ngModel)]="search.lastName"
+            name="lastName"
             class="rounded px-3 py-2 border border-input bg-input-background text-input-text w-36"
-            placeholder="Last Name" autocomplete="off" />
-          <button type="submit"
-            class="bg-primary text-primary-contrast rounded px-4 py-2 font-bold hover:bg-primary/90 transition">Search</button>
-          <button type="button"
+            placeholder="Last Name"
+            autocomplete="off" />
+          <button
+            type="submit"
+            class="bg-primary text-primary-contrast rounded px-4 py-2 font-bold hover:bg-primary/90 transition">
+            Search
+          </button>
+          <button
+            *ngIf="search.firstName || search.lastName"
+            type="button"
             class="ml-2 bg-highlight text-card-contrast rounded px-3 py-2 font-semibold hover:bg-highlight/80 transition"
-            (click)="clearSearch()" *ngIf="search.firstName || search.lastName">Clear</button>
+            (click)="clearSearch()">
+            Clear
+          </button>
         </form>
       </div>
 
@@ -44,28 +60,23 @@ export interface IamAccountRow extends AppUserDto {
           [data]="displayRows"
           [config]="userGridConfig"
           [loading]="loading"
+          (refresh)="loadUsers()"
+          (pageRequest)="onPageRequest($event)"
         ></app-table-grid>
       </div>
     </div>
   `
 })
 export class IamAccountsPageComponent implements OnInit {
-  users: AppUserDto[] = [];
   displayRows: IamAccountRow[] = [];
   loading = false;
   error = false;
 
-  page = 1;
-  pageSize = 20;
-  total = 0;
-  totalPages = 1;
+  page: number = 1;
+  pageSize: number = 10;
+  total: number = 0;
 
   search = { firstName: '', lastName: '' };
-
-  deletingUserId: string | null = null;
-  actionUserId: string | null = null;
-
-  // RoleId to RoleName cache
   private roleNameMap = new Map<string, string>();
 
   userGridConfig: TableGridConfig<IamAccountRow> = {
@@ -76,57 +87,69 @@ export class IamAccountsPageComponent implements OnInit {
       { field: 'userName', label: 'Username', sortable: true },
       { field: 'primaryRoleName', label: 'Role', sortable: true }
     ],
-    actions: [
-      {
-        label: 'View',
-        colorClass: 'text-info hover:bg-info/25',
-        callback: (user) => this.viewUser(user)
-      },
-      {
-        label: 'Edit',
-        colorClass: 'text-primary hover:bg-primary/25',
-        callback: (user) => this.editUser(user)
-      },
-      {
-        label: 'Delete',
-        colorClass: 'text-error hover:bg-error/25',
-        callback: (user) => this.deleteUser(user)
-      }
-    ],
-    pageSizeOptions: [10, 20, 50],
-    showVerticalLines: true,
+    actions: {
+      label: 'Actions',
+      width: '120',
+      actions: [
+        {
+          label: 'View',
+          colorClass: 'text-info hover:bg-info/25',
+          callback: user => this.viewUser(user)
+        },
+        {
+          label: 'Edit',
+          colorClass: 'text-primary hover:bg-primary/25',
+          callback: user => this.editUser(user)
+        },
+        {
+          label: 'Delete',
+          colorClass: 'text-error hover:bg-error/25',
+          callback: user => this.deleteUser(user)
+        }
+      ]
+    },
+    pageSizeOptions: [this.pageSize, 20, 50],
+    showVerticalLines: true
   };
 
-  constructor(
-    private iamServiceCollection: IamServiceCollection
-  ) {}
+  constructor(private iamServiceCollection: IamServiceCollection) { }
 
   ngOnInit() {
     this.loadUsers();
   }
 
-  loadUsers() {
+  onPageRequest({ page, pageSize }: { page: number; pageSize: number }) {
+    // avoid duplicate fetches when nothing changed
+    const changed = (this.page !== page) || (this.pageSize !== pageSize);
+    this.page = page;
+    this.pageSize = pageSize;
+    if (changed) this.loadUsers();
+  }
+
+
+  loadUsers(): void {
     this.loading = true;
     this.error = false;
 
-
-    let search$: Observable<AppUserDto[] | { items: AppUserDto[] }>;
-
-    if (this.search.firstName && this.search.lastName) {
-      search$ = this.iamServiceCollection.accountService.searchByFullName(this.search.firstName, this.search.lastName);
-    } else if (this.search.firstName) {
-      search$ = this.iamServiceCollection.accountService.searchByFirstName(this.search.firstName);
-    } else if (this.search.lastName) {
-      search$ = this.iamServiceCollection.accountService.searchByLastName(this.search.lastName);
-    } else {
-      search$ = this.iamServiceCollection.accountService.getPaged(this.page, this.pageSize);
+    // 1️⃣ server-side paging
+    if (!this.search.firstName && !this.search.lastName) {
+      this.iamServiceCollection.accountService
+        .getPaged(this.page, this.pageSize)
+        .subscribe({
+          next: async result => {
+            this.total = result.totalCount;            // <-- keep footer correct
+            await this.populateRoleNames(result.items);
+            this.loading = false;
+          },
+          error: () => { this.error = true; this.loading = false; }
+        });
+      return;
     }
 
-    search$.subscribe({
-      next: async (result: any) => {
-        // Get array of users whether paged or not
-        const users: AppUserDto[] = Array.isArray(result) ? result : result.items;
-        this.users = users;
+    // 2️⃣ search (still client-side)
+    this.getSearchObservable().subscribe({
+      next: async users => {
+        this.total = users.length;
         await this.populateRoleNames(users);
         this.loading = false;
       },
@@ -134,66 +157,65 @@ export class IamAccountsPageComponent implements OnInit {
     });
   }
 
+
+
+  private getSearchObservable(): Observable<AppUserDto[]> {
+    const { firstName, lastName } = this.search;
+    if (firstName && lastName) {
+      return this.iamServiceCollection.accountService.searchByFullName(firstName, lastName);
+    } else if (firstName) {
+      return this.iamServiceCollection.accountService.searchByFirstName(firstName);
+    } else {
+      return this.iamServiceCollection.accountService.searchByLastName(lastName);
+    }
+  }
+
+
   private async populateRoleNames(users: AppUserDto[]) {
-    // Get all unique primaryRoleIds (ignore null/undefined)
     const uniqueRoleIds = Array.from(
       new Set(users.map(u => u.primaryRoleId).filter(id => !!id))
     );
-    // Fetch and cache all missing role names
     await Promise.all(
       uniqueRoleIds.map(async roleId => {
         if (!this.roleNameMap.has(roleId!)) {
-          const role = await this.iamServiceCollection.roleService.getCachedById(roleId!);
-          if (role) {
-            this.roleNameMap.set(roleId!, role.name);
-          } else {
-            const detailed = await this.iamServiceCollection.roleService.getCachedDetailedById(roleId!);
-            if (detailed) {
-              this.roleNameMap.set(roleId!, detailed.name);
-            }
-          }
+          const r = await this.iamServiceCollection.roleService.getCachedById(roleId!);
+          this.roleNameMap.set(roleId!, r?.name ?? (await this.iamServiceCollection.roleService.getCachedDetailedById(roleId!))?.name ?? '');
         }
       })
     );
-    // Map users to displayRows with role names
     this.displayRows = users.map(u => ({
       ...u,
       primaryRoleName:
         u.primaryRoleId && this.roleNameMap.has(u.primaryRoleId)
           ? this.roleNameMap.get(u.primaryRoleId)!
-          : u.primaryRoleId // fallback: show id if name not found
+          : null
     }));
   }
 
   onSearch() {
-    this.page = 1;
     this.loadUsers();
   }
 
   clearSearch() {
     this.search = { firstName: '', lastName: '' };
-    this.page = 1;
     this.loadUsers();
   }
 
   viewUser(user: IamAccountRow) {
-    alert('View user: ' + user.userName);
+    alert(`View user: ${user.userName}`);
   }
+
   editUser(user: IamAccountRow) {
-    alert('Edit user: ' + user.userName);
+    alert(`Edit user: ${user.userName}`);
   }
+
   deleteUser(user: IamAccountRow) {
-    if (!confirm(`Delete user "${user.userName}"? This cannot be undone.`)) return;
-    this.deletingUserId = user.id;
+    if (!confirm(`Delete user "${user.userName}"? This cannot be undone.`)) {
+      return;
+    }
     this.iamServiceCollection.accountService.delete(user.id).subscribe({
-      next: () => {
-        this.deletingUserId = null;
-        this.loadUsers();
-      },
-      error: () => {
-        this.deletingUserId = null;
-        alert('Failed to delete user.');
-      }
+      next: () => this.loadUsers(),
+      error: () => alert('Failed to delete user.')
     });
   }
 }
