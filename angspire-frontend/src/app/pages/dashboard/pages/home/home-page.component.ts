@@ -11,7 +11,7 @@ import { RouterModule } from '@angular/router';
       <!-- Welcome -->
       <div>
         <h2 class="text-2xl font-bold">Welcome to Angspire ✨</h2>
-        <p class="text-sm text-muted">Let’s get started with your projects.</p>
+        <p class="text-sm text-secondary">Let’s get started with your projects.</p>
       </div>
 
       <!-- Quick Actions -->

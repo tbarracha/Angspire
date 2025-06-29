@@ -11,10 +11,11 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
     @if (item.route) {
       <a
         [routerLink]="item.route"
-        class="flex items-center p-2 rounded hover:bg-primary/25 w-full"
+        class="flex items-center p-2 rounded hover:bg-primary/25 w-full transition-colors"
         [class.justify-center]="isCollapsed"
         [class.justify-start]="!isCollapsed"
         [class.gap-2]="!isCollapsed"
+        [class]="{ 'bg-primary/10' : isSelected }"
       >
         <ng-container *ngTemplateOutlet="content"></ng-container>
       </a>
@@ -22,10 +23,11 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
       <button
         type="button"
         (click)="item.action?.()"
-        class="flex items-center p-2 rounded hover:bg-primary/25 w-full"
+        class="flex items-center p-2 rounded hover:bg-primary/25 w-full transition-colors"
         [class.justify-center]="isCollapsed"
         [class.justify-start]="!isCollapsed"
         [class.gap-2]="!isCollapsed"
+        [class]="{ 'bg-primary/10' : isSelected }"
       >
         <ng-container *ngTemplateOutlet="content"></ng-container>
       </button>
@@ -50,4 +52,5 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 export class SidebarMenuItemComponent {
   @Input() item!: SidebarMenuItem;
   @Input() isCollapsed = false;
+  @Input() isSelected = false;
 }

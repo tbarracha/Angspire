@@ -21,7 +21,7 @@ export interface IamAccountRow extends AppUserDto {
       <div class="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
         <div class="flex-1">
           <h2 class="text-2xl font-bold">Accounts</h2>
-          <p class="text-sm text-muted">View and manage all users in your IAM system.</p>
+          <p class="text-sm text-secondary">View and manage all users in your IAM system.</p>
         </div>
         <!-- Search -->
         <form class="flex gap-2" (submit)="onSearch(); $event.preventDefault()">
@@ -80,21 +80,22 @@ export class IamAccountsPageComponent implements OnInit {
     actions: [
       {
         label: 'View',
-        colorClass: 'text-info',
+        colorClass: 'text-info hover:bg-info/25',
         callback: (user) => this.viewUser(user)
       },
       {
         label: 'Edit',
-        colorClass: 'text-primary',
+        colorClass: 'text-primary hover:bg-primary/25',
         callback: (user) => this.editUser(user)
       },
       {
         label: 'Delete',
-        colorClass: 'text-error',
+        colorClass: 'text-error hover:bg-error/25',
         callback: (user) => this.deleteUser(user)
       }
     ],
-    pageSizeOptions: [10, 20, 50]
+    pageSizeOptions: [10, 20, 50],
+    showVerticalLines: true,
   };
 
   constructor(

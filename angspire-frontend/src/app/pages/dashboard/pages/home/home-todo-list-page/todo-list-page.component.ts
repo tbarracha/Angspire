@@ -20,7 +20,7 @@ interface KanbanCard {
     <div class="flex flex-col h-full space-y-6">
       <div>
         <h2 class="text-2xl font-bold">To-Do & Kanban 📝</h2>
-        <p class="text-sm text-muted">Organize your daily tasks and drag tasks across your Kanban workflow.</p>
+        <p class="text-sm text-secondary">Organize your daily tasks and drag tasks across your Kanban workflow.</p>
       </div>
       <div class="flex flex-1 flex-col md:flex-row gap-8 h-0 min-h-0">
         <!-- Todo List -->

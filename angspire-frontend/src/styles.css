@@ -14,12 +14,12 @@
   --primary-contrast: #e4e4e7;
 
   --secondary: #a1a1aa;
-  --secondary-contrast: #e4e4e7;
+  --secondary-contrast: #f4f4f5;
 
   --accent: #D80032;
   --accent-contrast: #fafafa;
 
-  --muted: #a1a1aa;
+  --muted: #d4d4d8;
   --muted-contrast: #18181b;
 
   --navbar-primary: #18181b;
@@ -28,7 +28,7 @@
   --navbar-secondary: #e4e4e7;
   --navbar-secondary-contrast: #18181b;
 
-  --card: #fff;
+  --card: #fafafa;
   --card-contrast: #18181b;
 
   --border: #e5e7eb;
@@ -36,8 +36,9 @@
 
   --highlight: #f4f4f5;
   --highlight-contrast: #18181b;
-  --hover: #f1f5f9;
-  --active: #e0e7ef;
+
+  --hover: #3f3f46;
+  --active: #a1a1aa;
 
   --success: #10b981;
   --success-contrast: #fff;
@@ -96,60 +97,7 @@
   
   --color-highlight: var(--highlight);
   --color-highlight-contrast: var(--highlight-contrast);
-  --color-hover: var(--hover);
-  --color-active: var(--active);
   
-  --color-success: var(--success);
-  --color-success-contrast: var(--success-contrast);
-  
-  --color-warning: var(--warning);
-  --color-warning-contrast: var(--warning-contrast);
-  
-  --color-error: var(--error);
-  --color-error-contrast: var(--error-contrast);
-  
-  --color-info: var(--info);
-  --color-info-contrast: var(--info-contrast);
-  
-  --color-input-background: var(--input-background);
-  --color-input-border: var(--input-border);
-  --color-input-text: var(--input-text);
-  --color-input-placeholder: var(--input-placeholder);
-  
-  --color-scrollbar-track: var(--scrollbar-track);
-  --color-scrollbar-thumb: var(--scrollbar-thumb);
-  
-  /* Theme END */
-}
-
-@theme static {
-      --color-midnight: #121063;
-      
-  /* Theme START */
-  
-  --color-background: var(--background);
-  --color-background-text: var(--background-text);
-  
-  --color-foreground: var(--foreground);
-  --color-foreground-text: var(--foreground-text);
-  
-  --color-primary: var(--primary);
-  --color-primary-contrast: var(--primary-contrast);
-  
-  --color-secondary: var(--secondary);
-  --color-secondary-contrast: var(--secondary-contrast);
-  
-  --color-accent: var(--accent);
-  --color-accent-contrast: var(--accent-contrast);
-  
-  --color-card: var(--card);
-  --color-card-contrast: var(--card-contrast);
-  
-  --color-border: var(--border);
-  --color-divider: var(--divider);
-  
-  --color-highlight: var(--highlight);
-  --color-highlight-contrast: var(--highlight-contrast);
   --color-hover: var(--hover);
   --color-active: var(--active);
   

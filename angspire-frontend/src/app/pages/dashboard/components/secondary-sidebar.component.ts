@@ -18,8 +18,8 @@ import { SidebarComponent } from '../../../shared/components/sider-component/sid
         [menuItems]="menuItems()"
         [bottomMenuItems]="bottomMenuItems"
         [isCollapsed]="isCollapsed"
-        variant="secondary"
-        [expandedWidth]="'13rem'"
+        [highlightSelected]="true"
+        [expandedWidth]="'10rem'"
         [collapsedWidth]="'3.5rem'"
       />
     </div>

@@ -16,4 +16,6 @@ export interface TableGridConfig<T = any> {
   }[];
   showHeader?: boolean;
   showFooter?: boolean;
+  showVerticalLines?: boolean;
+  showHorizontalLines?: boolean;
 }

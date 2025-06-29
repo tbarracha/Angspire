@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
       <!-- Welcome -->
       <div>
         <h2 class="text-2xl font-bold">Identity & Access Management 🔐</h2>
-        <p class="text-sm text-muted">Manage users, roles, permissions, and group access.</p>
+        <p class="text-sm text-secondary">Manage users, roles, permissions, and group access.</p>
       </div>
 
       <!-- Actions -->

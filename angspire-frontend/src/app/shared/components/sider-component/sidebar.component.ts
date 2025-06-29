@@ -42,6 +42,7 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
             <app-sidebar-menu-item
               [item]="item"
               [isCollapsed]="isCollapsed"
+              [isSelected]="highlightSelected && item === lastSelectedItem"
               (click)="onMenuItemClick(item)"
             />
           </div>
@@ -60,6 +61,7 @@ import { SidebarMenuItem } from '../../models/SidebarMenuItem';
             <app-sidebar-menu-item
               [item]="item"
               [isCollapsed]="isCollapsed"
+              [isSelected]="highlightSelected && item === lastSelectedItem"
             />
           </div>
           }
@@ -83,7 +85,15 @@ export class SidebarComponent {
   @Input() expandedWidth = '12rem';
   @Input() collapsedWidth = '3rem';
 
+  @Input() highlightSelected: boolean = false;
+
+  lastSelectedItem: SidebarMenuItem | null = null;
+
   onMenuItemClick(item: SidebarMenuItem) {
+    if (this.highlightSelected) {
+      this.lastSelectedItem = item;
+    }
+
     if (item.isCollapseToggle) {
       this.toggleCollapsed();
     }
