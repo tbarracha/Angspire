@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, defer, from } from 'rxjs';
-import { finalize, map, switchMap } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 import { AppUserDto } from '../../../../../features/iam/dtos/app-user-dto';
 import {
@@ -119,8 +119,9 @@ export class IamAccountsPageComponent implements OnInit {
 
     fetchPage: ({ page, pageSize, sortColumn, sortDir }) => {
       this.loading = true;
-      return defer(() =>
-        this.iamServiceCollection.accountService.getPaged(page, pageSize).pipe(
+      return this.iamServiceCollection.accountService
+        .getPaged(page, pageSize)
+        .pipe(
           switchMap(result =>
             from(this.enrichUsers(result.items)).pipe(
               map(enriched => ({
@@ -131,23 +132,30 @@ export class IamAccountsPageComponent implements OnInit {
               }))
             )
           ),
-          finalize(() => this.loading = false)
-        )
-      );
+          map(res => {
+            setTimeout(() => this.loading = false, 0);
+            return res;
+          })
+        );
     },
 
     fetchAll: () => {
+      const obs = this.getSearchObservable();
       this.loading = true;
-      return defer(() =>
-        this.getSearchObservable().pipe(
-          switchMap(users => from(this.enrichUsers(users))),
-          finalize(() => this.loading = false)
+      return obs.pipe(
+        switchMap(users =>
+          from(this.enrichUsers(users)).pipe(
+            map(rows => {
+              this.loading = false;
+              return rows;
+            })
+          )
         )
       );
     },
 
     onRefresh: () => {
-      setTimeout(() => this.loading = true);
+      this.loading = true;
     },
 
     storageKey: 'iam-accounts-column-widths',
