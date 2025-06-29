@@ -13,6 +13,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PaginatedResult } from '../../../lib/models/paginated-result';
+import { Observable } from 'rxjs';
 
 export interface TableGridColumnBase {
   label: string;
@@ -40,6 +42,20 @@ export interface TableGridConfig<T = any> {
   columns: TableGridColumn<T>[];
   actions?: TableGridAction;
   pageSizeOptions?: number[];
+
+  fetchAll?: () => Observable<T[]>;
+
+  fetchPage?: (params: {
+    page: number;
+    pageSize: number;
+    sortColumn: string | null;
+    sortDir: 'asc' | 'desc' | null;
+  }) => Observable<PaginatedResult<T>>;
+
+  onRefresh?: () => void;
+
+  storageKey?: string;
+
   showHeader?: boolean;
   showFooter?: boolean;
   showVerticalLines?: boolean;
@@ -61,17 +77,6 @@ export interface TableGridConfig<T = any> {
     <div *ngIf="resizingActive"
          class="pointer-events-none absolute top-0 h-full w-0.5 bg-accent opacity-80 z-50"
          [style.left.px]="resizeLinePx"></div>
-
-    <!-- handles overlay -->
-    <div *ngIf="resizerHandles.length"
-         class="absolute top-0 left-0 h-full w-full z-30 pointer-events-none">
-      <div *ngFor="let h of resizerHandles"
-           class="absolute top-0 h-full w-2 -translate-x-1/2 cursor-col-resize bg-transparent pointer-events-auto"
-           [style.left.px]="h.x"
-           (mousedown)="startResize($event, h.idx)"
-           (click)="$event.stopPropagation()">
-      </div>
-    </div>
 
     <!-- Table -->
     <table class="w-full min-w-max table-fixed">
@@ -107,6 +112,17 @@ export interface TableGridConfig<T = any> {
             {{ config.actions.label }}
           </th>
         </tr>
+
+        <!-- handles overlay -->
+        <div *ngIf="resizerHandles.length"
+             class="absolute top-0 left-0 h-full w-full z-30 pointer-events-none">
+          <div *ngFor="let h of resizerHandles"
+               class="absolute top-0 h-full w-2 -translate-x-1/2 cursor-col-resize bg-transparent pointer-events-auto"
+               [style.left.px]="h.x"
+               (mousedown)="startResize($event, h.idx)"
+               (click)="$event.stopPropagation()">
+          </div>
+        </div>
       </thead>
 
       <tbody>
@@ -225,7 +241,12 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   actionsWidth = 120;
 
   ngOnChanges(): void {
-    // page sizes
+    // 1) Restore any saved widths
+    if (this.config.storageKey) {
+      this.loadStoredWidths();
+    }
+
+    // 2) Apply pageSizeOptions if provided
     if (this.config.pageSizeOptions?.length) {
       this.pageSizeOptions = this.config.pageSizeOptions;
       this.pageSize = this.pageSizeOptions[0];
@@ -233,11 +254,13 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
 
     this.ensureWidths();
 
+    // 3) Respect actions.width if configured
     if (this.config.actions?.width) {
       const parsed = parseFloat(this.config.actions.width);
-      this.actionsWidth = isNaN(parsed) ? 120 : parsed;
+      this.actionsWidth = isNaN(parsed) ? this.actionsWidth : parsed;
     }
 
+    // 4) Fetch / slice data
     this.updatePagedData();
   }
 
@@ -262,22 +285,45 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
     });
   }
 
-  private setInitialColumnWidths() {
-    if (!this.headerCells?.length) return;
+  private setInitialColumnWidths(): void {
+  if (!this.headerCells?.length) return;
 
-    this.headerCells.forEach((cellRef, idx) => {
+  this.headerCells.forEach((cellRef, idx) => {
+    if (!this.config.columns[idx].width) {          // 👈 guard
       const w = cellRef.nativeElement.getBoundingClientRect().width;
       this.config.columns[idx].width = `${w}px`;
-    });
+    }
+  });
 
-    if (this.actionsHeaderCell && this.config.actions) {
-      // 👇 Only overwrite if not already defined
-      if (this.config.actions.width) {
-        const parsed = parseFloat(this.config.actions.width);
-        this.actionsWidth = isNaN(parsed) ? 120 : parsed;
-      } else {
-        this.actionsWidth = this.actionsHeaderCell.nativeElement.getBoundingClientRect().width;
-      }
+  if (this.actionsHeaderCell && this.config.actions) {
+    if (!this.config.actions.width) {               // 👈 guard
+      this.actionsWidth =
+        this.actionsHeaderCell.nativeElement.getBoundingClientRect().width;
+    }
+  }
+}
+
+  private loadStoredWidths() {
+  if (!this.config.storageKey) return;
+  try {
+    const raw = localStorage.getItem(this.config.storageKey);
+    if (!raw) return;
+
+    const widths: string[] = JSON.parse(raw);
+    if (widths.length === this.config.columns.length) {
+      this.config.columns.forEach((c, i) => c.width = widths[i] || c.width);
+      this.updateResizerHandles();      // 👈 handles match stored widths
+    }
+  } catch { /* ignore */ }
+}
+
+  private saveStoredWidths() {
+    if (!this.config.storageKey) return;
+    const widths = this.config.columns.map(c => c.width || '');
+    try {
+      localStorage.setItem(this.config.storageKey!, JSON.stringify(widths));
+    } catch {
+      // storage full / disabled, ignore
     }
   }
 
@@ -294,27 +340,86 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
     this.updatePagedData();
   }
 
-  updatePagedData() {
-    let rows = [...this.data];
+  updatePagedData(): void {
+    // Server‐driven paging takes absolute priority
+    if (this.config.fetchPage) {
+      this.config.fetchPage({
+        page: this.page,
+        pageSize: this.pageSize,
+        sortColumn: this.sortColumn,
+        sortDir: this.sortDir
+      }).subscribe({
+        next: result => {
+          this.total = result.totalCount;
+          this.pageData = result.items;
+          this.totalPages = Math.ceil(this.total / this.pageSize);
+          this.pageRequest.emit({ page: this.page, pageSize: this.pageSize });
+          this.updateResizerHandles();
+        },
+        error: err => {
+          console.error('fetchPage error', err);
+        }
+      });
+      return;
+    }
 
+    // "Fetch all" fallback
+    if (this.config.fetchAll) {
+      this.config.fetchAll().subscribe({
+        next: items => {
+          // apply sort if requested
+          if (this.sortColumn) {
+            items.sort((a, b) => {
+              const av = a[this.sortColumn! as keyof T];
+              const bv = b[this.sortColumn! as keyof T];
+              if (av == null) return 1;
+              if (bv == null) return -1;
+              return this.sortDir === 'asc'
+                ? (av > bv ? 1 : -1)
+                : (av < bv ? 1 : -1);
+            });
+          }
+          this.total = items.length;
+          this.totalPages = Math.ceil(this.total / this.pageSize);
+          this.pageData = items.slice(
+            (this.page - 1) * this.pageSize,
+            this.page * this.pageSize
+          );
+          this.pageRequest.emit({ page: this.page, pageSize: this.pageSize });
+          this.updateResizerHandles();
+        },
+        error: err => {
+          console.error('fetchAll error', err);
+        }
+      });
+      return;
+    }
+
+    // Last fallback: client‐side slice & sort of this.data
+    const rows = [...this.data];
     if (this.sortColumn) {
       rows.sort((a, b) => {
         const av = a[this.sortColumn! as keyof T];
         const bv = b[this.sortColumn! as keyof T];
         if (av == null) return 1;
         if (bv == null) return -1;
-        return this.sortDir === 'asc' ? (av > bv ? 1 : -1) : av < bv ? 1 : -1;
+        return this.sortDir === 'asc'
+          ? (av > bv ? 1 : -1)
+          : (av < bv ? 1 : -1);
       });
     }
 
-    this.total = this.total || rows.length;
-
-    this.totalPages = Math.max(1, Math.ceil(rows.length / this.pageSize));
-    this.pageData = rows.slice((this.page - 1) * this.pageSize,
-      this.page * this.pageSize);
+    this.total = rows.length;
+    this.totalPages = Math.ceil(this.total / this.pageSize);
+    this.pageData = rows.slice(
+      (this.page - 1) * this.pageSize,
+      this.page * this.pageSize
+    );
 
     this.pageRequest.emit({ page: this.page, pageSize: this.pageSize });
+    this.updateResizerHandles();
   }
+
 
   prevPage() {
     if (this.page > 1) {
@@ -438,6 +543,7 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
     if (this.resizingActive) {
       this.resizingActive = false;
       document.body.style.cursor = '';
+      this.saveStoredWidths();
     }
   }
 }
