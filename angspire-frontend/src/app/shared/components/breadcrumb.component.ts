@@ -13,19 +13,19 @@ interface Breadcrumb {
     standalone: true,
     imports: [CommonModule, RouterModule],
     template: `
-    <nav class="flex text-sm items-center gap-3 text-foreground-text font-semibold" aria-label="Breadcrumb">
+    <nav class="flex text-sm items-center gap-3 text-foreground-text/60 font-semibold" aria-label="Breadcrumb">
       <ng-container *ngFor="let crumb of breadcrumbs; let last = last">
         <ng-container *ngIf="!last; else lastBreadcrumb">
           <a
             [routerLink]="crumb.url"
-            class="text-foreground-text/60 hover:text-accent transition-colors"
+            class="hover:text-accent transition-colors"
           >
             {{ crumb.label }}
           </a>
           <span class="mx-2 select-none">/</span>
         </ng-container>
         <ng-template #lastBreadcrumb>
-          <span class="cursor-default">{{ crumb.label }}</span>
+          <span class="text-foreground-text cursor-default">{{ crumb.label }}</span>
         </ng-template>
       </ng-container>
     </nav>

@@ -1,70 +1,108 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableGridConfig, TableGridColumn } from './table-interfaaces';
 
 @Component({
   selector: 'app-table-grid',
+  standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="w-full">
-      <table class="w-full border bg-card text-card-contrast rounded shadow min-w-[720px]">
-        <thead>
-          <tr class="bg-highlight border-b border-border sticky top-0 z-10">
-            <th *ngFor="let col of config.columns"
-                class="py-2 px-4 font-semibold"
+  <div class="w-full h-full flex flex-col rounded shadow min-w-[720px] overflow-hidden bg-card text-card-contrast">
+  <div class="flex-1 min-h-0 overflow-x-auto">
+    <table class="w-full min-w-max table-fixed">
+      @if (config.showHeader ?? true) {
+        <thead class="sticky top-0 z-10 bg-highlight border-b border-border">
+          <tr>
+            @for (col of config.columns; track col.field) {
+              <th
+                class="py-2 px-4 font-semibold text-sm text-left bg-highlight text-highlight-contrast border-0 relative group select-none"
                 [style.width]="col.width"
-                [ngClass]="{'cursor-pointer select-none': col.sortable}"
-                (click)="col.sortable && sortBy(col)">
-              {{ col.label }}
-              <span *ngIf="col.sortable">
-                <ng-container *ngIf="sortColumn === col.field">
-                  <span *ngIf="sortDir === 'asc'">&#8593;</span>
-                  <span *ngIf="sortDir === 'desc'">&#8595;</span>
-                </ng-container>
-              </span>
-            </th>
-            <th *ngIf="config.actions?.length" class="py-2 px-4 font-semibold text-right">Actions</th>
+                [ngClass]="{'cursor-pointer': col.sortable, 'hover:bg-primary hover:text-secondary-contrast': col.sortable}"
+                (click)="col.sortable && sortBy(col)"
+              >
+                <div class="flex items-center w-full">
+                  <span class="truncate whitespace-nowrap overflow-hidden block">{{ col.label }}</span>
+                  @if (col.sortable) {
+                    <span class="ml-1">
+                      @if (sortColumn === col.field) {
+                        <span *ngIf="sortDir === 'asc'">&#8593;</span>
+                        <span *ngIf="sortDir === 'desc'">&#8595;</span>
+                      }
+                    </span>
+                  }
+                </div>
+                <!-- Resize handle -->
+                <span
+                  class="absolute right-0 top-0 h-full w-2 cursor-col-resize z-20 group-hover:bg-muted/40"
+                  (mousedown)="startResize($event, col)"
+                  (click)="$event.stopPropagation()"
+                ></span>
+              </th>
+            }
+            @if (config.actions?.length) {
+              <th class="py-2 px-4 font-semibold text-right text-sm bg-highlight text-highlight-contrast relative group select-none"
+                  [style.width]="actionsWidth + 'px'">
+                Actions
+                <!-- Resize handle for Actions -->
+                <span
+                  class="absolute right-0 top-0 h-full w-2 cursor-col-resize z-20 group-hover:bg-muted/40"
+                  (mousedown)="startResize($event, null)"
+                  (click)="$event.stopPropagation()"
+                ></span>
+              </th>
+            }
           </tr>
         </thead>
-        <tbody>
-          <tr *ngIf="loading">
-            <td [attr.colspan]="config.columns.length + (config.actions?.length ? 1 : 0)"
-                class="py-8 text-center text-muted">Loading...</td>
-          </tr>
-          <tr *ngIf="!loading && pageData.length === 0">
-            <td [attr.colspan]="config.columns.length + (config.actions?.length ? 1 : 0)"
-                class="py-8 text-center text-muted">No data found.</td>
-          </tr>
-          <tr *ngFor="let row of pageData">
-            <td *ngFor="let col of config.columns" class="py-2 px-4 truncate">
+      }
+      <tbody>
+        <tr *ngIf="loading">
+          <td [attr.colspan]="config.columns.length + (config.actions?.length ? 1 : 0)"
+              class="py-8 text-center text-muted bg-card">Loading...</td>
+        </tr>
+        <tr *ngIf="!loading && pageData.length === 0">
+          <td [attr.colspan]="config.columns.length + (config.actions?.length ? 1 : 0)"
+              class="py-8 text-center text-muted bg-card">No data found.</td>
+        </tr>
+        <tr *ngFor="let row of pageData" class="hover:bg-hover transition">
+          @for (col of config.columns; track col.field) {
+            <td
+              class="py-1 px-4 truncate whitespace-nowrap overflow-hidden text-sm border-0"
+              [style.width]="col.width"
+            >
               {{ row[col.field] ?? '—' }}
             </td>
-            <td *ngIf="config.actions?.length" class="py-2 px-4 text-right space-x-1">
+          }
+          @if (config.actions?.length) {
+            <td class="py-1 px-4 text-right space-x-1 border-0" [style.width]="actionsWidth + 'px'">
               <ng-container *ngFor="let act of config.actions">
                 <button
                   type="button"
-                  class="px-2 py-1 rounded font-semibold"
-                  [ngClass]="act.colorClass || 'text-primary'"
+                  class="px-2 py-1 rounded font-semibold text-sm transition"
+                  [ngClass]="act.colorClass || 'bg-primary text-primary-contrast hover:bg-secondary hover:text-secondary-contrast'"
                   (click)="act.callback(row)"
                 >
                   {{ act.label }}
                 </button>
               </ng-container>
             </td>
-          </tr>
-        </tbody>
-      </table>
-      <!-- Pagination -->
-      <div class="flex items-center justify-between py-4">
-        <div class="text-muted text-sm">
+          }
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  @if (config.showFooter ?? true) {
+    <div class="sticky bottom-0 z-10 bg-card border-t border-border">
+      <div class="flex items-center justify-between py-2 px-4">
+        <div class="text-muted text-xs">
           Page {{ page }} of {{ totalPages }} ({{ total }} items)
         </div>
         <div class="flex items-center gap-2">
           <select *ngIf="pageSizeOptions.length > 1"
                   [(ngModel)]="pageSize"
                   (change)="updatePagedData()"
-                  class="rounded border px-2 py-1 text-sm bg-input-background text-input-text">
+                  class="rounded border border-input-border px-2 py-1 text-xs bg-input-background text-input-text">
             <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}/page</option>
           </select>
           <button class="px-3 py-1 rounded bg-secondary text-secondary-contrast font-bold hover:bg-secondary/80 transition"
@@ -74,6 +112,9 @@ import { TableGridConfig, TableGridColumn } from './table-interfaaces';
         </div>
       </div>
     </div>
+  }
+</div>
+
   `
 })
 export class TableGridComponent<T extends Record<string, any>> implements OnChanges {
@@ -92,10 +133,27 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   total = 0;
   totalPages = 1;
 
+  // Resizing state
+  resizingCol: TableGridColumn<T> | null = null;
+  resizingStartX = 0;
+  resizingStartWidth = 0;
+  resizingActions = false;
+  actionsWidth = 120;
+  resizingActive = false;
+  resizeLineOffset = 0;
+  resizingColIndex = -1;
+  resizingNextCol: TableGridColumn<T> | null = null;
+  resizingNextStartWidth = 0;
+
+
   ngOnChanges() {
     if (this.config?.pageSizeOptions) {
       this.pageSizeOptions = this.config.pageSizeOptions;
     }
+    // Set default widths if not present
+    this.config.columns.forEach((col) => {
+      if (!col.width) col.width = '160px';
+    });
     this.page = 1;
     this.updatePagedData();
   }
@@ -136,10 +194,76 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
       this.updatePagedData();
     }
   }
+
   nextPage() {
     if (this.page < this.totalPages) {
       this.page++;
       this.updatePagedData();
     }
   }
+
+  // --- Column resizing logic ---
+  startResize(event: MouseEvent, col: TableGridColumn<T> | null) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.resizingCol = col;
+    this.resizingActions = col === null;
+    this.resizingActive = true;
+    this.resizingStartX = event.clientX;
+
+    if (col) {
+      this.resizingStartWidth = parseInt(col.width?.replace('px', '') || '160', 10);
+      this.resizingColIndex = this.config.columns.findIndex(c => c === col);
+      if (this.resizingColIndex >= 0 && this.resizingColIndex < this.config.columns.length - 1) {
+        this.resizingNextCol = this.config.columns[this.resizingColIndex + 1];
+        this.resizingNextStartWidth = parseInt(this.resizingNextCol.width?.replace('px', '') || '160', 10);
+      } else {
+        this.resizingNextCol = null;
+        this.resizingNextStartWidth = 0;
+      }
+    } else {
+      this.resizingStartWidth = this.actionsWidth;
+    }
+    document.body.style.cursor = 'col-resize';
+  }
+
+
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (!this.resizingActive) return;
+    const dx = event.clientX - this.resizingStartX;
+    this.resizeLineOffset = dx + (this.resizingCol ? parseInt(this.resizingCol.width?.replace('px', '') || '160', 10) : this.actionsWidth);
+
+    if (this.resizingCol) {
+      // Only resize this column and the one to its right
+      const minWidth = 48;
+      let newWidth = Math.max(minWidth, this.resizingStartWidth + dx);
+      let delta = newWidth - this.resizingStartWidth;
+      if (this.resizingNextCol) {
+        let nextNewWidth = Math.max(minWidth, this.resizingNextStartWidth - delta);
+        // Prevent over-shrinking
+        if (nextNewWidth === minWidth) {
+          newWidth = this.resizingStartWidth + (this.resizingNextStartWidth - minWidth);
+        }
+        this.resizingNextCol.width = `${nextNewWidth}px`;
+      }
+      this.resizingCol.width = `${newWidth}px`;
+    }
+    if (this.resizingActions) {
+      this.actionsWidth = Math.max(48, this.resizingStartWidth + dx);
+    }
+  }
+
+
+  @HostListener('document:mouseup')
+  onMouseUp() {
+    if (this.resizingActive) {
+      this.resizingCol = null;
+      this.resizingColIndex = -1;
+      this.resizingNextCol = null;
+      this.resizingActive = false;
+      document.body.style.cursor = '';
+    }
+  }
+
 }

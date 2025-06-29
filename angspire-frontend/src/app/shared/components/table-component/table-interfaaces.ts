@@ -14,4 +14,6 @@ export interface TableGridConfig<T = any> {
     callback: (row: T) => void;
     colorClass?: string;
   }[];
+  showHeader?: boolean;
+  showFooter?: boolean;
 }
