@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppUserDto } from '../../../../../features/iam/dtos/app-user-dto';
-import { TableGridComponent } from '../../../../../shared/components/table-component/table-grid.component';
-import { TableGridConfig } from '../../../../../shared/components/table-component/table-interfaaces';
+import { TableGridComponent, TableGridConfig } from '../../../../../shared/components/table-component/table-grid.component';
 import { IamServiceCollection } from '../../../../../features/iam/services/iam-service-collection';
 import { Observable, of } from 'rxjs';
 

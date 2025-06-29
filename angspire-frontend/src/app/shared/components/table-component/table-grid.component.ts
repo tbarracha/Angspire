@@ -1,7 +1,29 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TableGridConfig, TableGridColumn } from './table-interfaaces';
+
+export interface TableGridColumn<T = any> {
+  field: keyof T | string;
+  label: string;
+  sortable?: boolean;
+  width?: string;
+  minWidth?: string;
+}
+
+export interface TableGridConfig<T = any> {
+  columns: TableGridColumn<T>[];
+  pageSizeOptions?: number[];
+  actions?: {
+    label: string;
+    icon?: string;
+    callback: (row: T) => void;
+    colorClass?: string;
+  }[];
+  showHeader?: boolean;
+  showFooter?: boolean;
+  showVerticalLines?: boolean;
+  showHorizontalLines?: boolean;
+}
 
 @Component({
   selector: 'app-table-grid',
@@ -9,7 +31,7 @@ import { TableGridConfig, TableGridColumn } from './table-interfaaces';
   imports: [CommonModule, FormsModule],
   template: `
   <div class="w-full h-full flex flex-col rounded shadow min-w-[720px] overflow-hidden bg-card text-card-contrast relative">
-    <!-- ───── Scroll Container ───── -->
+    <!-- ----- Scroll Container ----- -->
     <div #scrollRef
          class="flex-1 min-h-0 overflow-x-auto relative"
          (scroll)="updateResizerHandles()">
@@ -30,7 +52,7 @@ import { TableGridConfig, TableGridColumn } from './table-interfaaces';
                   [style.width]="col.width"
                   [ngClass]="{
                     'cursor-pointer': col.sortable,
-                    'hover:bg-primary hover:text-secondary-contrast': col.sortable,
+                    'hover:bg-primary hover:text-secondary-contrast': (col.sortable && !resizingActive),
                     'border-r border-border': config.showVerticalLines
                   }"
                   (mousedown)="col.sortable && sortBy(col)">
@@ -54,11 +76,11 @@ import { TableGridConfig, TableGridColumn } from './table-interfaaces';
             </th>
           </tr>
 
-          <!-- ───── Handles Overlay ───── -->
+          <!-- ----- Handles Overlay ----- -->
           <div class="absolute top-0 left-0 h-full w-full z-30 pointer-events-none"
                *ngIf="resizerHandles.length">
             <div *ngFor="let h of resizerHandles"
-                 class="absolute top-0 h-full w-2 -translate-x-1/2 cursor-col-resize bg-transparent hover:bg-accent/40 pointer-events-auto"
+                 class="absolute top-0 h-full w-2 -translate-x-1/2 cursor-col-resize bg-transparenn pointer-events-auto"
                  [style.left.px]="h.x"
                  (mousedown)="startResize($event, h.idx)"
                  (click)="$event.stopPropagation()">
@@ -142,23 +164,27 @@ import { TableGridConfig, TableGridColumn } from './table-interfaaces';
         </div>
       </div>
     </ng-container>
+  </div>
   `
 })
 export class TableGridComponent<T extends Record<string, any>> implements OnChanges, AfterViewInit {
-  /* ──────────────────────────── Inputs / Outputs ──────────────────────────── */
+  /* ---------------------------- Inputs & Outputs ---------------------------- */
   @Input() config!: TableGridConfig<T>;
   @Input() data: T[] = [];
   @Input() loading = false;
   @Output() refresh = new EventEmitter<void>();
 
-  /* ──────────────────────────── Template refs ─────────────────────────────── */
+
+  /* ---------------------------- Template References ------------------------- */
   @ViewChild('scrollRef', { static: false }) scrollRef!: ElementRef<HTMLDivElement>;
   @ViewChildren('headerCell') headerCells!: QueryList<ElementRef<HTMLTableCellElement>>;
   @ViewChild('actionsHeader', { static: false }) actionsHeaderCell!: ElementRef<HTMLTableCellElement>;
 
-  /* ──────────────────────────── State & misc (same as before) ─────────────── */
+
+  /* ---------------------------- Paging & Sorting State ---------------------- */
   sortColumn: string | null = null;
   sortDir: 'asc' | 'desc' = 'asc';
+
   page = 1;
   pageSize = 20;
   pageSizeOptions = [10, 20, 50, 100];
@@ -166,20 +192,26 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   totalPages = 1;
   pageData: T[] = [];
 
-  /* resize */
+
+  /* ---------------------------- Resizing State ------------------------------ */
   resizerHandles: { idx: number; x: number }[] = [];
+
   resizingActive = false;
   leftColIdx = -1;
   startX = 0;
+
   leftStartW = 0;
   rightStartW = 0;
-  resizeLinePx = 0;
-  actionsWidth = 120;
   rightMinW = 48;
+
+  resizeLinePx = 0;
   startLineOffset = 0;
 
+  actionsWidth = 120;
 
-  /* ──────────────────────────── Lifecycle ─────────────────────────────────── */
+
+  /* ---------------------------- Lifecycle ----------------------------------- */
+
   ngOnChanges() {
     this.ensureWidths();
     this.updatePagedData();
@@ -187,15 +219,28 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   }
 
   ngAfterViewInit() {
-    // initial after view render
     requestAnimationFrame(() => {
       this.setInitialColumnWidths();
       this.updateResizerHandles();
     });
   }
 
+
+  /* ---------------------------- Utility ----------------------------------- */
+
   onRefresh() {
     this.refresh.emit();
+  }
+
+  trackByField(_: number, col: TableGridColumn<T>) {
+    return col.field;
+  }
+
+  ensureWidths() {
+    if (!this.config?.columns) return;
+    this.config.columns.forEach((c: TableGridColumn<T>) => {
+      if (!c.width) c.width = '160px';
+    });
   }
 
   private setInitialColumnWidths() {
@@ -214,16 +259,11 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   }
 
 
-  ensureWidths() {
-    if (!this.config?.columns) return;
-    this.config.columns.forEach((c: TableGridColumn<T>) => {
-      if (!c.width) c.width = '160px';
-    });
-  }
+
+  /* ---------------------------- Sorting ----------------------------------- */
 
   sortBy(col: TableGridColumn<T>) {
-    if (!col.sortable || this.resizingActive)
-      return;
+    if (!col.sortable || this.resizingActive) return;
 
     if (this.sortColumn === col.field) {
       this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
@@ -231,9 +271,13 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
       this.sortColumn = col.field as string;
       this.sortDir = 'asc';
     }
+
     this.page = 1;
     this.updatePagedData();
   }
+
+
+  /* ---------------------------- Pagination ----------------------------------- */
 
   updatePagedData() {
     const rows = [...this.data];
@@ -248,6 +292,7 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
           : (av < bv ? 1 : -1);
       });
     }
+
     this.total = rows.length;
     this.totalPages = Math.max(1, Math.ceil(this.total / this.pageSize));
     this.pageData = rows.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
@@ -267,6 +312,9 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
     }
   }
 
+
+  /* ---------------------------- Column Resizing ----------------------------------- */
+
   updateResizerHandles() {
     if (!this.scrollRef || !this.headerCells?.length) return;
 
@@ -276,9 +324,7 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
     this.resizerHandles = this.headerCells.map((cellRef, idx) => {
       const rect = cellRef.nativeElement.getBoundingClientRect();
       return { idx, x: rect.right - containerLeft + scroll };
-    })
-      // skip final data-data handle if no actions column
-      .filter(h => h.idx < this.config.columns.length - 1 || this.config.actions?.length);
+    }).filter(h => h.idx < this.config.columns.length - 1 || this.config.actions?.length);
   }
 
   startResize(ev: MouseEvent, idx: number) {
@@ -289,9 +335,9 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
     this.leftColIdx = idx;
     this.startX = ev.clientX;
 
-    // === read live DOM widths instead of inline style =========
     const leftCell = this.headerCells.toArray()[idx].nativeElement;
     const leftRect = leftCell.getBoundingClientRect();
+
     const isLastDataCol = idx === this.config.columns.length - 1 && this.config.actions?.length;
     const rightCell = isLastDataCol
       ? null
@@ -300,12 +346,10 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
 
     this.leftStartW = leftRect.width;
     this.rightStartW = isLastDataCol ? this.actionsWidth : rightRect!.width;
-    this.rightMinW = isLastDataCol ? 48 : rightRect!.width;   // real min width
+    this.rightMinW = isLastDataCol ? 48 : rightRect!.width;
 
-    // guide line
     const contLeft = this.scrollRef.nativeElement.getBoundingClientRect().left;
     const scroll = this.scrollRef.nativeElement.scrollLeft;
-    //this.startLineOffset = leftRect.right - contLeft + scroll;   // exact edge
     this.startLineOffset = ev.clientX - contLeft + scroll;
     this.resizeLinePx = this.startLineOffset;
 
@@ -316,38 +360,38 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   onMove(ev: MouseEvent) {
     if (!this.resizingActive) return;
 
-    const minWidth = 48;
+    const defaultMinWidth = 64;
+
+    const leftMin = parseFloat(this.config.columns[this.leftColIdx].minWidth ?? `${defaultMinWidth}`);
+    const rightMin = this.leftColIdx < this.config.columns.length - 1
+      ? parseFloat(this.config.columns[this.leftColIdx + 1].minWidth ?? `${defaultMinWidth}`)
+      : defaultMinWidth;
     const mouseX = ev.clientX;
 
     const leftCell = this.headerCells.toArray()[this.leftColIdx].nativeElement;
     const leftRect = leftCell.getBoundingClientRect();
-    const isLastDataCol = this.leftColIdx === this.config.columns.length - 1 && this.config.actions?.length;
 
-    let rightRect: DOMRect | null = null;
-    if (isLastDataCol) {
-      rightRect = this.actionsHeaderCell?.nativeElement.getBoundingClientRect() ?? null;
-    } else {
-      rightRect = this.headerCells.toArray()[this.leftColIdx + 1].nativeElement.getBoundingClientRect();
-    }
+    const isLastDataCol = this.leftColIdx === this.config.columns.length - 1 && this.config.actions?.length;
+    const rightRect = isLastDataCol
+      ? this.actionsHeaderCell?.nativeElement.getBoundingClientRect() ?? null
+      : this.headerCells.toArray()[this.leftColIdx + 1].nativeElement.getBoundingClientRect();
 
     if (!rightRect) return;
 
-    // Compute new widths based on keeping the mouseX as the column boundary
     let newLeftW = mouseX - leftRect.left;
     let newRightW = rightRect.right - mouseX;
 
-    // Enforce minimums
-    if (newLeftW < minWidth) {
-      const offset = minWidth - newLeftW;
-      newLeftW = minWidth;
-      newRightW = Math.max(minWidth, newRightW - offset);
-    } else if (newRightW < minWidth) {
-      const offset = minWidth - newRightW;
-      newRightW = minWidth;
-      newLeftW = Math.max(minWidth, newLeftW - offset);
+    if (newLeftW < leftMin) {
+      const offset = leftMin - newLeftW;
+      newLeftW = leftMin;
+      newRightW = Math.max(rightMin, newRightW - offset);
+    } else if (newRightW < rightMin) {
+      const offset = rightMin - newRightW;
+      newRightW = rightMin;
+      newLeftW = Math.max(leftMin, newLeftW - offset);
     }
 
-    // Apply column widths
+
     if (this.leftColIdx < this.config.columns.length - 1) {
       this.config.columns[this.leftColIdx].width = `${newLeftW}px`;
       this.config.columns[this.leftColIdx + 1].width = `${newRightW}px`;
@@ -356,14 +400,12 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
       this.actionsWidth = newRightW;
     }
 
-    // Move the guide line exactly under the mouse
     const containerLeft = this.scrollRef.nativeElement.getBoundingClientRect().left;
     const scroll = this.scrollRef.nativeElement.scrollLeft;
     this.resizeLinePx = mouseX - containerLeft + scroll;
 
     this.updateResizerHandles();
   }
-
 
   @HostListener('document:mouseup')
   stopResize() {
@@ -372,6 +414,4 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
       document.body.style.cursor = '';
     }
   }
-
-  trackByField(_: number, col: TableGridColumn<T>) { return col.field; }
 }

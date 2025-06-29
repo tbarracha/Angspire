@@ -1,3 +1,4 @@
+/*
 export interface TableGridColumn<T = any> {
   field: keyof T | string;
   label: string;
@@ -19,3 +20,4 @@ export interface TableGridConfig<T = any> {
   showVerticalLines?: boolean;
   showHorizontalLines?: boolean;
 }
+*/
