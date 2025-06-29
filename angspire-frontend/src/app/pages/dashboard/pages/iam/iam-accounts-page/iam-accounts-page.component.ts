@@ -104,6 +104,7 @@ export class IamAccountsPageComponent implements OnInit {
     },
     pageSizeOptions: [10, 20, 50],
     showVerticalLines: true,
+    showHorizontalLines: true,
     storageKey: 'iam-accounts-column-widths',
   };
 

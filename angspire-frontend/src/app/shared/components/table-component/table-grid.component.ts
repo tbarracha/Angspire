@@ -121,13 +121,20 @@ export interface TableGridConfig<T = any> {
         <tr *ngFor="let row of pageData" class="hover:bg-highlight transition">
           <ng-container *ngFor="let col of config.columns; trackBy: trackByField">
             <td [style.width]="col.width"
-                [ngClass]="{'border-r border-border': config.showVerticalLines}"
+                [ngClass]="{
+                  'border-r border-border': config.showVerticalLines,
+                  'border-b border-border': config.showHorizontalLines
+                }"
                 class="py-1 px-4 truncate text-sm border-0">
               {{ row[col.field] ?? '—' }}
             </td>
           </ng-container>
           <td *ngIf="config.actions"
               [style.width.px]="actionsWidth"
+              [ngClass]="{
+                'border-r border-border': config.showVerticalLines,
+                'border-b border-border': config.showHorizontalLines
+              }"
               class="py-1 px-4 text-right space-x-1 border-0">
             <ng-container *ngFor="let act of config.actions.actions">
               <button type="button"
