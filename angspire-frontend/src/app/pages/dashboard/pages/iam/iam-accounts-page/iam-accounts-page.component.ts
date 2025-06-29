@@ -1,15 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, from } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-
+import { TableGridComponent, TableGridConfig } from '../../../../../shared/components/table-component/table-grid.component';
 import { AppUserDto } from '../../../../../features/iam/dtos/app-user-dto';
-import {
-  TableGridComponent,
-  TableGridConfig,
-} from '../../../../../shared/components/table-component/table-grid.component';
 import { IamServiceCollection } from '../../../../../features/iam/services/iam-service-collection';
+import { map } from 'rxjs';
 
 export interface IamAccountRow extends AppUserDto {
   primaryRoleName: string | null;
@@ -21,21 +16,17 @@ export interface IamAccountRow extends AppUserDto {
   imports: [CommonModule, FormsModule, TableGridComponent],
   template: `
     <div class="flex flex-col h-full">
-      <!-- Header + Actions -->
       <div class="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
         <div class="flex-1">
           <h2 class="text-2xl font-bold">Accounts</h2>
           <p class="text-sm text-secondary">View and manage all users in your IAM system.</p>
         </div>
 
-        <!-- Search -->
         <form class="flex gap-2" (submit)="onSearch(); $event.preventDefault()">
-          <input [(ngModel)]="search.firstName" name="firstName"
-                 class="rounded px-3 py-2 border border-input bg-input-background text-input-text w-36"
-                 placeholder="First Name" autocomplete="off" />
-          <input [(ngModel)]="search.lastName" name="lastName"
-                 class="rounded px-3 py-2 border border-input bg-input-background text-input-text w-36"
-                 placeholder="Last Name" autocomplete="off" />
+          <input [(ngModel)]="search.firstName" name="firstName" placeholder="First Name"
+                 class="rounded px-3 py-2 border border-input bg-input-background text-input-text w-36" />
+          <input [(ngModel)]="search.lastName" name="lastName" placeholder="Last Name"
+                 class="rounded px-3 py-2 border border-input bg-input-background text-input-text w-36" />
           <button type="submit"
                   class="bg-primary text-primary-contrast rounded px-4 py-2 font-bold hover:bg-primary/90 transition">
             Search
@@ -48,10 +39,16 @@ export interface IamAccountRow extends AppUserDto {
         </form>
       </div>
 
-      <!-- Table -->
       <div class="flex-1 min-h-0 bg-card rounded-xl shadow overflow-auto">
         <app-table-grid
-          [config]="userGridConfig">
+          [config]="userGridConfig"
+          [data]="visibleData"
+          [page]="page"
+          [pageSize]="pageSize"
+          [total]="total"
+          [loading]="loading"
+          (refresh)="refreshData()"
+          (pageRequest)="onPageRequest($event)">
         </app-table-grid>
       </div>
     </div>
@@ -59,30 +56,21 @@ export interface IamAccountRow extends AppUserDto {
 })
 export class IamAccountsPageComponent implements OnInit {
   loading = true;
-
   search = { firstName: '', lastName: '' };
+
+  users: IamAccountRow[] = [];
+  visibleData: IamAccountRow[] = [];
+
+  page = 1;
+  pageSize = 20;
+  total = 0;
+
   private roleNameMap = new Map<string, string>();
 
   constructor(public iamServiceCollection: IamServiceCollection) { }
 
   ngOnInit(): void {
-    // no need to trigger anything — grid will call fetchPage/fetchAll automatically
-  }
-
-  /** Populate `primaryRoleName` into AppUserDto list */
-  private async enrichUsers(users: AppUserDto[]): Promise<IamAccountRow[]> {
-    const roleIds = Array.from(new Set(users.map(u => u.primaryRoleId).filter(Boolean)));
-    await Promise.all(roleIds.map(async id => {
-      if (!this.roleNameMap.has(id!)) {
-        const role = await this.iamServiceCollection.roleService.getCachedById(id!);
-        const detailed = await this.iamServiceCollection.roleService.getCachedDetailedById(id!);
-        this.roleNameMap.set(id!, role?.name ?? detailed?.name ?? '');
-      }
-    }));
-    return users.map(u => ({
-      ...u,
-      primaryRoleName: u.primaryRoleId ? this.roleNameMap.get(u.primaryRoleId)! : null
-    }));
+    this.refreshData();
   }
 
   userGridConfig: TableGridConfig<IamAccountRow> = {
@@ -116,69 +104,80 @@ export class IamAccountsPageComponent implements OnInit {
     },
     pageSizeOptions: [10, 20, 50],
     showVerticalLines: true,
-
-    fetchPage: ({ page, pageSize, sortColumn, sortDir }) => {
-      this.loading = true;
-      return this.iamServiceCollection.accountService
-        .getPaged(page, pageSize)
-        .pipe(
-          switchMap(result =>
-            from(this.enrichUsers(result.items)).pipe(
-              map(enriched => ({
-                items: enriched,
-                totalCount: result.totalCount,
-                page,
-                pageSize
-              }))
-            )
-          ),
-          map(res => {
-            setTimeout(() => this.loading = false, 0);
-            return res;
-          })
-        );
-    },
-
-    fetchAll: () => {
-      const obs = this.getSearchObservable();
-      this.loading = true;
-      return obs.pipe(
-        switchMap(users =>
-          from(this.enrichUsers(users)).pipe(
-            map(rows => {
-              this.loading = false;
-              return rows;
-            })
-          )
-        )
-      );
-    },
-
-    onRefresh: () => {
-      this.loading = true;
-    },
-
     storageKey: 'iam-accounts-column-widths',
   };
 
-
-  /** Search field → appropriate observable */
-  private getSearchObservable(): Observable<AppUserDto[]> {
-    const { firstName, lastName } = this.search;
-    if (firstName && lastName)
-      return this.iamServiceCollection.accountService.searchByFullName(firstName, lastName);
-    if (firstName)
-      return this.iamServiceCollection.accountService.searchByFirstName(firstName);
-    return this.iamServiceCollection.accountService.searchByLastName(lastName);
+  onPageRequest(e: { page: number; pageSize: number }) {
+    this.page = e.page;
+    this.pageSize = e.pageSize;
+    this.refreshVisibleData();
   }
 
   onSearch() {
-    this.loading = true;
+    this.page = 1;
+    this.refreshData();
   }
 
   clearSearch() {
     this.search = { firstName: '', lastName: '' };
+    this.page = 1;
+    this.refreshData();
+  }
+
+  refreshData() {
     this.loading = true;
+    this.getSearchObservable().subscribe({
+      next: async (users: AppUserDto[]) => {
+        this.users = await this.enrichUsers(users);
+        this.total = this.users.length;
+        this.refreshVisibleData();
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  refreshVisibleData() {
+    const start = (this.page - 1) * this.pageSize;
+    const end = this.page * this.pageSize;
+    this.visibleData = this.users.slice(start, end);
+  }
+
+  private getSearchObservable() {
+    const { firstName, lastName } = this.search;
+
+    if (firstName && lastName)
+      return this.iamServiceCollection.accountService.searchByFullName(firstName, lastName);
+
+    if (firstName)
+      return this.iamServiceCollection.accountService.searchByFirstName(firstName.trim());
+
+    if (lastName)
+      return this.iamServiceCollection.accountService.searchByLastName(lastName.trim());
+
+    // Fallback: simulate "getAll" by requesting a large page
+    return this.iamServiceCollection.accountService.getPaged(1, 500).pipe(
+      map(result => result.items)
+    );
+  }
+
+
+
+  private async enrichUsers(users: AppUserDto[]): Promise<IamAccountRow[]> {
+    const roleIds = Array.from(new Set(users.map(u => u.primaryRoleId).filter(Boolean)));
+    await Promise.all(roleIds.map(async id => {
+      if (!this.roleNameMap.has(id!)) {
+        const role = await this.iamServiceCollection.roleService.getCachedById(id!);
+        const detailed = await this.iamServiceCollection.roleService.getCachedDetailedById(id!);
+        this.roleNameMap.set(id!, role?.name ?? detailed?.name ?? '');
+      }
+    }));
+    return users.map(u => ({
+      ...u,
+      primaryRoleName: u.primaryRoleId ? this.roleNameMap.get(u.primaryRoleId)! : null
+    }));
   }
 
   viewUser(user: IamAccountRow) {
@@ -192,7 +191,7 @@ export class IamAccountsPageComponent implements OnInit {
   deleteUser(user: IamAccountRow) {
     if (!confirm(`Delete user "${user.userName}"? This cannot be undone.`)) return;
     this.iamServiceCollection.accountService.delete(user.id).subscribe({
-      next: () => this.loading = true,
+      next: () => this.refreshData(),
       error: () => alert('Failed to delete user.')
     });
   }
