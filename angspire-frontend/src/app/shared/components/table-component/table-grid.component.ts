@@ -188,12 +188,31 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
 
   ngAfterViewInit() {
     // initial after view render
-    requestAnimationFrame(() => this.updateResizerHandles());
+    requestAnimationFrame(() => {
+      this.setInitialColumnWidths();
+      this.updateResizerHandles();
+    });
   }
 
   onRefresh() {
     this.refresh.emit();
   }
+
+  private setInitialColumnWidths() {
+    if (!this.headerCells?.length || !this.config?.columns) return;
+
+    this.headerCells.forEach((cellRef, idx) => {
+      const cellEl = cellRef.nativeElement;
+      const width = cellEl.getBoundingClientRect().width;
+      this.config.columns[idx].width = `${width}px`;
+    });
+
+    if (this.actionsHeaderCell) {
+      const actionsWidth = this.actionsHeaderCell.nativeElement.getBoundingClientRect().width;
+      this.actionsWidth = actionsWidth;
+    }
+  }
+
 
   ensureWidths() {
     if (!this.config?.columns) return;
@@ -294,56 +313,56 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   }
 
   @HostListener('document:mousemove', ['$event'])
-onMove(ev: MouseEvent) {
-  if (!this.resizingActive) return;
+  onMove(ev: MouseEvent) {
+    if (!this.resizingActive) return;
 
-  const minWidth = 48;
-  const mouseX = ev.clientX;
+    const minWidth = 48;
+    const mouseX = ev.clientX;
 
-  const leftCell = this.headerCells.toArray()[this.leftColIdx].nativeElement;
-  const leftRect = leftCell.getBoundingClientRect();
-  const isLastDataCol = this.leftColIdx === this.config.columns.length - 1 && this.config.actions?.length;
+    const leftCell = this.headerCells.toArray()[this.leftColIdx].nativeElement;
+    const leftRect = leftCell.getBoundingClientRect();
+    const isLastDataCol = this.leftColIdx === this.config.columns.length - 1 && this.config.actions?.length;
 
-  let rightRect: DOMRect | null = null;
-  if (isLastDataCol) {
-    rightRect = this.actionsHeaderCell?.nativeElement.getBoundingClientRect() ?? null;
-  } else {
-    rightRect = this.headerCells.toArray()[this.leftColIdx + 1].nativeElement.getBoundingClientRect();
+    let rightRect: DOMRect | null = null;
+    if (isLastDataCol) {
+      rightRect = this.actionsHeaderCell?.nativeElement.getBoundingClientRect() ?? null;
+    } else {
+      rightRect = this.headerCells.toArray()[this.leftColIdx + 1].nativeElement.getBoundingClientRect();
+    }
+
+    if (!rightRect) return;
+
+    // Compute new widths based on keeping the mouseX as the column boundary
+    let newLeftW = mouseX - leftRect.left;
+    let newRightW = rightRect.right - mouseX;
+
+    // Enforce minimums
+    if (newLeftW < minWidth) {
+      const offset = minWidth - newLeftW;
+      newLeftW = minWidth;
+      newRightW = Math.max(minWidth, newRightW - offset);
+    } else if (newRightW < minWidth) {
+      const offset = minWidth - newRightW;
+      newRightW = minWidth;
+      newLeftW = Math.max(minWidth, newLeftW - offset);
+    }
+
+    // Apply column widths
+    if (this.leftColIdx < this.config.columns.length - 1) {
+      this.config.columns[this.leftColIdx].width = `${newLeftW}px`;
+      this.config.columns[this.leftColIdx + 1].width = `${newRightW}px`;
+    } else {
+      this.config.columns[this.leftColIdx].width = `${newLeftW}px`;
+      this.actionsWidth = newRightW;
+    }
+
+    // Move the guide line exactly under the mouse
+    const containerLeft = this.scrollRef.nativeElement.getBoundingClientRect().left;
+    const scroll = this.scrollRef.nativeElement.scrollLeft;
+    this.resizeLinePx = mouseX - containerLeft + scroll;
+
+    this.updateResizerHandles();
   }
-
-  if (!rightRect) return;
-
-  // Compute new widths based on keeping the mouseX as the column boundary
-  let newLeftW = mouseX - leftRect.left;
-  let newRightW = rightRect.right - mouseX;
-
-  // Enforce minimums
-  if (newLeftW < minWidth) {
-    const offset = minWidth - newLeftW;
-    newLeftW = minWidth;
-    newRightW = Math.max(minWidth, newRightW - offset);
-  } else if (newRightW < minWidth) {
-    const offset = minWidth - newRightW;
-    newRightW = minWidth;
-    newLeftW = Math.max(minWidth, newLeftW - offset);
-  }
-
-  // Apply column widths
-  if (this.leftColIdx < this.config.columns.length - 1) {
-    this.config.columns[this.leftColIdx].width = `${newLeftW}px`;
-    this.config.columns[this.leftColIdx + 1].width = `${newRightW}px`;
-  } else {
-    this.config.columns[this.leftColIdx].width = `${newLeftW}px`;
-    this.actionsWidth = newRightW;
-  }
-
-  // Move the guide line exactly under the mouse
-  const containerLeft = this.scrollRef.nativeElement.getBoundingClientRect().left;
-  const scroll = this.scrollRef.nativeElement.scrollLeft;
-  this.resizeLinePx = mouseX - containerLeft + scroll;
-
-  this.updateResizerHandles();
-}
 
 
   @HostListener('document:mouseup')
