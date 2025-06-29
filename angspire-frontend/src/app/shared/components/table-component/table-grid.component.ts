@@ -8,6 +8,7 @@ export interface TableGridColumn<T = any> {
   sortable?: boolean;
   width?: string;
   minWidth?: string;
+  maxWidth?: string;
 }
 
 export interface TableGridConfig<T = any> {
@@ -183,7 +184,7 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
 
   /* ---------------------------- Paging & Sorting State ---------------------- */
   sortColumn: string | null = null;
-  sortDir: 'asc' | 'desc' = 'asc';
+  sortDir: 'asc' | 'desc' | null = null;
 
   page = 1;
   pageSize = 20;
@@ -259,14 +260,20 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   }
 
 
-
   /* ---------------------------- Sorting ----------------------------------- */
 
   sortBy(col: TableGridColumn<T>) {
     if (!col.sortable || this.resizingActive) return;
 
     if (this.sortColumn === col.field) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+      if (this.sortDir === 'asc') {
+        this.sortDir = 'desc';
+      } else if (this.sortDir === 'desc') {
+        this.sortColumn = null;
+        this.sortDir = null;
+      } else {
+        this.sortDir = 'asc';
+      }
     } else {
       this.sortColumn = col.field as string;
       this.sortDir = 'asc';
@@ -328,59 +335,92 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   }
 
   startResize(ev: MouseEvent, idx: number) {
+    // Prevent default behavior and stop event from propagating (to avoid unwanted selection or bubbling)
     ev.preventDefault();
     ev.stopPropagation();
 
+    // Begin resizing state
     this.resizingActive = true;
     this.leftColIdx = idx;
     this.startX = ev.clientX;
 
+    // Get the left column DOM element and its dimensions
     const leftCell = this.headerCells.toArray()[idx].nativeElement;
     const leftRect = leftCell.getBoundingClientRect();
 
+    // Determine if this is the last data column (before the actions column)
     const isLastDataCol = idx === this.config.columns.length - 1 && this.config.actions?.length;
+
+    // Get the right column DOM element and its dimensions (or null if it's the actions column)
     const rightCell = isLastDataCol
       ? null
       : this.headerCells.toArray()[idx + 1].nativeElement;
     const rightRect = rightCell ? rightCell.getBoundingClientRect() : null;
 
+    // Save initial widths before resizing starts
     this.leftStartW = leftRect.width;
     this.rightStartW = isLastDataCol ? this.actionsWidth : rightRect!.width;
+
+    // Set minimum width constraint for the right column
     this.rightMinW = isLastDataCol ? 48 : rightRect!.width;
 
+    // Calculate starting offset for the vertical guide line
     const contLeft = this.scrollRef.nativeElement.getBoundingClientRect().left;
     const scroll = this.scrollRef.nativeElement.scrollLeft;
     this.startLineOffset = ev.clientX - contLeft + scroll;
+
+    // Initialize guide line position
     this.resizeLinePx = this.startLineOffset;
 
+    // Set global cursor to indicate resizing in progress
     document.body.style.cursor = 'col-resize';
   }
 
   @HostListener('document:mousemove', ['$event'])
   onMove(ev: MouseEvent) {
-    if (!this.resizingActive) return;
+    if (!this.resizingActive) return; // Do nothing if not actively resizing
 
     const defaultMinWidth = 64;
 
-    const leftMin = parseFloat(this.config.columns[this.leftColIdx].minWidth ?? `${defaultMinWidth}`);
+    // Get left and right column definitions
+    const leftCol = this.config.columns[this.leftColIdx];
+    const rightCol = this.config.columns[this.leftColIdx + 1];
+
+    // Resolve min/max widths for left column
+    const leftMin = parseFloat(leftCol.minWidth ?? `${defaultMinWidth}`);
+    const leftMax = parseFloat(leftCol.maxWidth ?? `${Infinity}`);
+
+    // Resolve min/max widths for right column
     const rightMin = this.leftColIdx < this.config.columns.length - 1
-      ? parseFloat(this.config.columns[this.leftColIdx + 1].minWidth ?? `${defaultMinWidth}`)
+      ? parseFloat(rightCol?.minWidth ?? `${defaultMinWidth}`)
       : defaultMinWidth;
+
+    const rightMax = this.leftColIdx < this.config.columns.length - 1
+      ? parseFloat(rightCol?.maxWidth ?? `${Infinity}`)
+      : Infinity;
+
+    // Get mouse X position
     const mouseX = ev.clientX;
 
+    // Get left cell DOM element and its current bounds
     const leftCell = this.headerCells.toArray()[this.leftColIdx].nativeElement;
     const leftRect = leftCell.getBoundingClientRect();
 
+    // Determine if the right column is the actions column (last column)
     const isLastDataCol = this.leftColIdx === this.config.columns.length - 1 && this.config.actions?.length;
+
+    // Get right cell bounds (either regular column or actions column)
     const rightRect = isLastDataCol
       ? this.actionsHeaderCell?.nativeElement.getBoundingClientRect() ?? null
       : this.headerCells.toArray()[this.leftColIdx + 1].nativeElement.getBoundingClientRect();
 
     if (!rightRect) return;
 
+    // Calculate tentative new widths based on mouse position
     let newLeftW = mouseX - leftRect.left;
     let newRightW = rightRect.right - mouseX;
 
+    // --- Clamp widths to min values ---
     if (newLeftW < leftMin) {
       const offset = leftMin - newLeftW;
       newLeftW = leftMin;
@@ -391,19 +431,36 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
       newLeftW = Math.max(leftMin, newLeftW - offset);
     }
 
+    // --- Clamp left width to max, and expand right accordingly ---
+    if (newLeftW > leftMax) {
+      const offset = newLeftW - leftMax;
+      newLeftW = leftMax;
+      newRightW = Math.max(rightMin, newRightW + offset);
+    }
 
+    // --- Clamp right width to max, and expand left accordingly ---
     if (this.leftColIdx < this.config.columns.length - 1) {
+      if (newRightW > rightMax) {
+        const offset = newRightW - rightMax;
+        newRightW = rightMax;
+        newLeftW = Math.max(leftMin, newLeftW + offset);
+      }
+
+      // Apply new widths to both columns
       this.config.columns[this.leftColIdx].width = `${newLeftW}px`;
       this.config.columns[this.leftColIdx + 1].width = `${newRightW}px`;
     } else {
+      // If resizing the last data column against the actions column
       this.config.columns[this.leftColIdx].width = `${newLeftW}px`;
       this.actionsWidth = newRightW;
     }
 
+    // Update visual resize guide line
     const containerLeft = this.scrollRef.nativeElement.getBoundingClientRect().left;
     const scroll = this.scrollRef.nativeElement.scrollLeft;
     this.resizeLinePx = mouseX - containerLeft + scroll;
 
+    // Recalculate handle positions
     this.updateResizerHandles();
   }
 
