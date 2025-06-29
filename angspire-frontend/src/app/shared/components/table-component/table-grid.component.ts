@@ -138,15 +138,16 @@ export interface TableGridConfig<T = any> {
         </tr>
       </tbody>
 
-        <div *ngIf="resizerHandles.length"
-             class="absolute top-0 left-0 h-full w-full z-30 pointer-events-none">
-          <div *ngFor="let h of resizerHandles"
-               class="absolute top-0 h-full w-2 -translate-x-1/2 cursor-col-resize bg-transparent pointer-events-auto"
-               [style.left.px]="h.x"
-               (mousedown)="startResize($event, h.idx)"
-               (click)="$event.stopPropagation()">
-          </div>
+      <!-- Resizer -->
+      <div *ngIf="resizerHandles.length"
+           class="absolute top-0 left-0 h-full w-full z-30 pointer-events-none">
+        <div *ngFor="let h of resizerHandles"
+             class="absolute top-0 h-full w-2 -translate-x-1/2 cursor-col-resize bg-transparent pointer-events-auto"
+             [style.left.px]="h.x"
+             (mousedown)="startResize($event, h.idx)"
+             (click)="$event.stopPropagation()">
         </div>
+      </div>
     </table>
   </div>
 
