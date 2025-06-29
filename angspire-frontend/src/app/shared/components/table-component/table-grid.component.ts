@@ -72,10 +72,10 @@ export interface TableGridConfig<T = any> {
                 [style.width]="col.width"
                 [ngClass]="{
                   'cursor-pointer': col.sortable,
-                  'hover:bg-primary hover:text-secondary-contrast': col.sortable && !resizingActive,
-                  'border-r border-border': config.showVerticalLines
+                  'hover:bg-primary hover:text-primary-contrast': col.sortable && !resizingActive,
+                  'border-r border-primary/50': config.showVerticalLines
                 }"
-                class="py-2 px-4 font-semibold text-sm text-left bg-secondary/50 text-highlight-contrast select-none relative"
+                class="py-2 px-4 font-semibold text-sm text-left bg-secondary/50 text-highlight-contrast select-none relative z-50"
                 (mousedown)="col.sortable && onSort(col.field)">
               <div class="flex items-center">
                 <span class="truncate">{{ col.label }}</span>
@@ -96,16 +96,6 @@ export interface TableGridConfig<T = any> {
             {{ config.actions.label }}
           </th>
         </tr>
-
-        <div *ngIf="resizerHandles.length"
-             class="absolute top-0 left-0 h-full w-full z-30 pointer-events-none">
-          <div *ngFor="let h of resizerHandles"
-               class="absolute top-0 h-full w-2 -translate-x-1/2 cursor-col-resize bg-transparent pointer-events-auto"
-               [style.left.px]="h.x"
-               (mousedown)="startResize($event, h.idx)"
-               (click)="$event.stopPropagation()">
-          </div>
-        </div>
       </thead>
 
       <tbody>
@@ -147,12 +137,22 @@ export interface TableGridConfig<T = any> {
           </td>
         </tr>
       </tbody>
+
+        <div *ngIf="resizerHandles.length"
+             class="absolute top-0 left-0 h-full w-full z-30 pointer-events-none">
+          <div *ngFor="let h of resizerHandles"
+               class="absolute top-0 h-full w-2 -translate-x-1/2 cursor-col-resize bg-transparent pointer-events-auto"
+               [style.left.px]="h.x"
+               (mousedown)="startResize($event, h.idx)"
+               (click)="$event.stopPropagation()">
+          </div>
+        </div>
     </table>
   </div>
 
   <!-- FOOTER -->
   <ng-container *ngIf="config.showFooter ?? true">
-    <div class="sticky bottom-0 z-10 bg-card border-t border-border">
+    <div class="sticky bottom-0 z-50 bg-card border-t border-border">
       <div class="flex items-center justify-between py-1 px-3 text-xs h-9">
         <span class="text-secondary text-xs">
           Page {{ page }} of {{ totalPages }} ({{ total }} items)
