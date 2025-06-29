@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ButtonComponent } from '../shared/components/button.component';
+import { ButtonComponent } from '../shared/components/input-components/button.component';
 
 @Component({
   selector: 'app-button-testing',

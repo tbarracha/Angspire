@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { SidebarMenuItem } from '../models/SidebarMenuItem';
+import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 
 @Component({
   selector: 'app-sidebar-menu-item',

@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { PrimarySidebarComponent } from './components/primary-sidebar.component';
 import { SecondarySidebarComponent } from './components/secondary-sidebar.component';
 import { AppStateService } from '../../shared/app-state/app-state.service';
+import { BreadcrumbComponent } from "../../shared/components/breadcrumb.component";
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -10,8 +11,9 @@ import { AppStateService } from '../../shared/app-state/app-state.service';
   imports: [
     RouterOutlet,
     PrimarySidebarComponent,
-    SecondarySidebarComponent
-  ],
+    SecondarySidebarComponent,
+    BreadcrumbComponent
+],
   template: `
     <div class="flex h-full w-full bg-foreground">
 
@@ -23,7 +25,7 @@ import { AppStateService } from '../../shared/app-state/app-state.service';
 
         <!-- Top Navbar (main area only) -->
         <nav class="h-12 flex items-center justify-between px-4 bg-foreground text-foreground-text">
-          <h1 class="text-lg font-semibold">Dashboard</h1>
+          <app-breadcrumb />
           <div>
             <!-- Profile, Settings, Logout buttons -->
           </div>

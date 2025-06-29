@@ -1,8 +1,8 @@
 import { Component, AfterViewInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarComponent } from '../../../shared/components/sidebar.component';
 import { SidebarMenuItem } from '../../../shared/models/SidebarMenuItem';
 import { AppStateService } from '../../../shared/app-state/app-state.service';
+import { SidebarComponent } from '../../../shared/components/sider-component/sidebar.component';
 
 @Component({
   selector: 'app-primary-sidebar',

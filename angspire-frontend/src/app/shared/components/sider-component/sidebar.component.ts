@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { SidebarMenuItem } from '../models/SidebarMenuItem';
 import { SidebarMenuItemComponent } from './sidebar-menu-item.component';
-import { LogoLinkComponent } from './logo-link.component';
+import { LogoLinkComponent } from '../logo-link.component';
+import { SidebarMenuItem } from '../../models/SidebarMenuItem';
 
 @Component({
   selector: 'app-sidebar',

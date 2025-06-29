@@ -24,7 +24,7 @@ interface KanbanCard {
       </div>
       <div class="flex flex-1 flex-col md:flex-row gap-8 h-0 min-h-0">
         <!-- Todo List -->
-        <div class="flex-1 flex flex-col bg-card text-card-contrast rounded-xl shadow p-6 max-w-lg mx-auto md:mx-0 h-full min-h-0">
+        <div class="flex-1 flex flex-col bg-card text-card-contrast rounded-xl shadow p-5 max-w-lg mx-auto md:mx-0 h-full min-h-0">
           <form (submit)="addTask(); $event.preventDefault()" class="flex gap-2 mb-4">
             <input
               [(ngModel)]="newTask"
@@ -68,7 +68,7 @@ interface KanbanCard {
         </div>
 
         <!-- Kanban Board -->
-        <div class="flex-[2] flex flex-col bg-card text-card-contrast rounded-xl shadow p-6 overflow-x-auto h-full">
+        <div class="flex-[2] flex flex-col bg-card text-card-contrast rounded-xl shadow p-5 overflow-x-auto h-full">
           <div class="flex flex-1 justify-between gap-4 h-full">
             <div
               *ngFor="let col of kanbanColumns; let colIdx = index"

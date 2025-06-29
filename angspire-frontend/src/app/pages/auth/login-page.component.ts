@@ -5,8 +5,8 @@ import { AuthService } from '../../features/authentication/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { SocialLoginButtonsComponent } from "./social-login-buttons.component";
 import { LoginRequestDto } from '../../features/authentication/dtos/requests/login-request-dto';
-import { InputComponent } from '../../shared/components/input.component';
-import { ButtonComponent } from "../../shared/components/button.component";
+import { InputComponent } from '../../shared/components/input-components/input.component';
+import { ButtonComponent } from "../../shared/components/input-components/button.component";
 
 @Component({
   selector: 'app-login-page',
