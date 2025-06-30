@@ -75,15 +75,15 @@ export class IamAccountsPageComponent implements OnInit {
 
   userGridConfig: TableGridConfig<IamAccountRow> = {
     columns: [
-      { field: 'firstName', label: 'First Name', sortable: true },
-      { field: 'lastName', label: 'Last Name', sortable: true },
+      { field: 'firstName', label: 'First Name', sortable: true, width: '200px' },
+      { field: 'lastName', label: 'Last Name', sortable: true, width: '200px' },
       { field: 'email', label: 'Email', sortable: true },
       { field: 'userName', label: 'Username', sortable: true },
-      { field: 'primaryRoleName', label: 'Role', sortable: true }
+      { field: 'primaryRoleName', label: 'Role', sortable: true, width: '96px' },
     ],
     actions: {
       label: 'Actions',
-      width: '120px',
+      width: '192px',
       actions: [
         {
           label: 'View',
@@ -105,7 +105,6 @@ export class IamAccountsPageComponent implements OnInit {
     pageSizeOptions: [10, 20, 50],
     showVerticalLines: true,
     showHorizontalLines: true,
-    storageKey: 'iam-accounts-column-widths',
   };
 
   onPageRequest(e: { page: number; pageSize: number }) {
@@ -163,8 +162,6 @@ export class IamAccountsPageComponent implements OnInit {
       map(result => result.items)
     );
   }
-
-
 
   private async enrichUsers(users: AppUserDto[]): Promise<IamAccountRow[]> {
     const roleIds = Array.from(new Set(users.map(u => u.primaryRoleId).filter(Boolean)));
