@@ -13,8 +13,12 @@ export interface TableGridColumnBase {
   label: string;
   width?: string;
   customClass?: string;
+  /** Horizontal alignment: left | center | right **/
   alignHorizontal?: 'left' | 'center' | 'right';
+  /** Vertical alignment: top | middle | bottom **/
   alignVertical?: 'top' | 'middle' | 'bottom';
+  /** Hide or show column **/
+  hidden?: boolean;
 }
 
 export interface TableGridColumn<T = any> extends TableGridColumnBase {
@@ -53,7 +57,7 @@ export interface TableGridConfig<T = any> {
     <table class="w-full table-fixed">
       <thead *ngIf="config.showHeader ?? true" class="sticky top-0 z-10 bg-highlight border-b border-border">
         <tr>
-          <ng-container *ngFor="let col of config.columns; trackBy: trackByField">
+          <ng-container *ngFor="let col of visibleColumns; trackBy: trackByField">
             <th
               [style.width]="col.width"
               [ngClass]="{
@@ -62,9 +66,9 @@ export interface TableGridConfig<T = any> {
                 'border-r border-border': config.showVerticalLines,
                 'text-center': col.alignHorizontal === 'center',
                 'text-right': col.alignHorizontal === 'right',
-                'alignHorizontal-top': col.alignVertical === 'top',
-                'alignHorizontal-middle': col.alignVertical === 'middle',
-                'alignHorizontal-bottom': col.alignVertical === 'bottom'
+                'align-top': col.alignVertical === 'top',
+                'align-middle': col.alignVertical === 'middle',
+                'align-bottom': col.alignVertical === 'bottom'
               }"
               class="py-2 px-4 font-semibold text-sm text-left bg-secondary/50 text-highlight-contrast select-none"
               (click)="col.sortable && onSort(col.field)">
@@ -84,9 +88,9 @@ export interface TableGridConfig<T = any> {
               [style.width]="config.actions.width"
               [ngClass]="{
                 'border-r border-border': config.showVerticalLines,
-                'text-right': config.actions.alignHorizontal === 'right',
                 'text-center': config.actions.alignHorizontal === 'center',
-                'alignHorizontal-middle': config.actions.alignVertical === 'middle'
+                'text-right': config.actions.alignHorizontal === 'right',
+                'align-middle': config.actions.alignVertical === 'middle'
               }"
               class="py-2 px-4 font-semibold text-sm bg-secondary/50 text-highlight-contrast">
             {{ config.actions.label }}
@@ -96,20 +100,20 @@ export interface TableGridConfig<T = any> {
 
       <tbody>
         <tr *ngIf="loading">
-          <td [attr.colspan]="config.columns.length + (config.actions ? 1 : 0)"
+          <td [attr.colspan]="visibleColumns.length + (config.actions ? 1 : 0)"
               class="py-8 text-center text-muted bg-card">
             Loading…
           </td>
         </tr>
         <tr *ngIf="!loading && pageData.length === 0">
-          <td [attr.colspan]="config.columns.length + (config.actions ? 1 : 0)"
+          <td [attr.colspan]="visibleColumns.length + (config.actions ? 1 : 0)"
               class="py-8 text-center text-muted bg-card">
             No data found.
           </td>
         </tr>
 
         <tr *ngFor="let row of pageData" class="hover:bg-highlight transition">
-          <ng-container *ngFor="let col of config.columns; trackBy: trackByField">
+          <ng-container *ngFor="let col of visibleColumns; trackBy: trackByField">
             <td
               [style.width]="col.width"
               [ngClass]="{
@@ -117,9 +121,9 @@ export interface TableGridConfig<T = any> {
                 'border-b border-border': config.showHorizontalLines,
                 'text-center': col.alignHorizontal === 'center',
                 'text-right': col.alignHorizontal === 'right',
-                'alignHorizontal-top': col.alignVertical === 'top',
-                'alignHorizontal-middle': col.alignVertical === 'middle',
-                'alignHorizontal-bottom': col.alignVertical === 'bottom'
+                'align-top': col.alignVertical === 'top',
+                'align-middle': col.alignVertical === 'middle',
+                'align-bottom': col.alignVertical === 'bottom'
               }"
               class="py-1 px-4 truncate text-sm {{ col.customClass || '' }}">
               {{ row[col.field] ?? '—' }}
@@ -131,9 +135,9 @@ export interface TableGridConfig<T = any> {
               [ngClass]="{
                 'border-r border-border': config.showVerticalLines,
                 'border-b border-border': config.showHorizontalLines,
-                'text-right': config.actions.alignHorizontal === 'right',
                 'text-center': config.actions.alignHorizontal === 'center',
-                'alignHorizontal-middle': config.actions.alignVertical === 'middle'
+                'text-right': config.actions.alignHorizontal === 'right',
+                'align-middle': config.actions.alignVertical === 'middle'
               }"
               class="py-1 px-4 space-x-1">
             <ng-container *ngFor="let act of config.actions.actions">
@@ -165,13 +169,17 @@ export interface TableGridConfig<T = any> {
             <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}/page</option>
           </select>
 
-          <button (click)="onRefresh()" class="h-8 px-2 py-1 rounded bg-secondary text-secondary-contrast hover:bg-secondary/80" title="Refresh">
+          <button (click)="onRefresh()"
+                  title="Refresh"
+                  class="h-8 px-2 py-1 rounded bg-secondary text-secondary-contrast hover:bg-secondary/80">
             ⟳
           </button>
-          <button (click)="prevPage()" [disabled]="page<=1" class="h-8 px-3 py-1 rounded bg-secondary text-secondary-contrast font-bold hover:bg-secondary/80">
+          <button (click)="prevPage()" [disabled]="page<=1"
+                  class="h-8 px-3 py-1 rounded bg-secondary text-secondary-contrast font-bold hover:bg-secondary/80">
             ←
           </button>
-          <button (click)="nextPage()" [disabled]="page>=totalPages" class="h-8 px-3 py-1 rounded bg-secondary text-secondary-contrast font-bold hover:bg-secondary/80">
+          <button (click)="nextPage()" [disabled]="page>=totalPages"
+                  class="h-8 px-3 py-1 rounded bg-secondary text-secondary-contrast font-bold hover:bg-secondary/80">
             →
           </button>
         </div>
@@ -190,7 +198,12 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   @Input() loading = false;
 
   @Output() refresh = new EventEmitter<void>();
-  @Output() pageRequest = new EventEmitter<{ page: number; pageSize: number; sortColumn: string | null; sortDir: 'asc' | 'desc' | null; }>();
+  @Output() pageRequest = new EventEmitter<{
+    page: number;
+    pageSize: number;
+    sortColumn: string | null;
+    sortDir: 'asc' | 'desc' | null;
+  }>();
 
   sortColumn: string | null = null;
   sortDir: 'asc' | 'desc' | null = null;
@@ -199,9 +212,17 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
   pageSizeOptions: number[] = [10, 20, 50, 100];
   pageData: T[] = [];
 
+  visibleColumns: TableGridColumn<T>[] = [];
+
   ngOnChanges(): void {
+    // update visibleColumns
+    this.visibleColumns = this.config.columns.filter(c => !c.hidden);
+
+    // update pageSizeOptions & totalPages
     this.pageSizeOptions = this.config.pageSizeOptions ?? this.pageSizeOptions;
     this.totalPages = Math.ceil(this.total / this.pageSize) || 1;
+
+    // sort & pageData
     this.updateDisplay();
   }
 
@@ -229,7 +250,11 @@ export class TableGridComponent<T extends Record<string, any>> implements OnChan
 
   onSort(field: string | keyof T) {
     if (this.sortColumn === field) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : this.sortDir === 'desc' ? null : 'asc';
+      this.sortDir = this.sortDir === 'asc'
+        ? 'desc'
+        : this.sortDir === 'desc'
+          ? null
+          : 'asc';
       if (!this.sortDir) this.sortColumn = null;
     } else {
       this.sortColumn = field as string;

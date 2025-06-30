@@ -5,6 +5,10 @@ import { TableGridComponent, TableGridConfig } from '../../../../../shared/compo
 import { AppUserDto } from '../../../../../features/iam/dtos/app-user-dto';
 import { IamServiceCollection } from '../../../../../features/iam/services/iam-service-collection';
 import { map } from 'rxjs';
+import { ModalComponent } from "../../../../../shared/components/modal-components/modal.component";
+import { AccountService } from '../../../../../features/iam/services/account.service';
+import { ConfirmationModalComponent } from '../../../../../shared/components/modal-components/confirmation-modal.component';
+import { UpdateAppUserDetailsDto } from '../../../../../features/iam/dtos/update-app-user-details-dto';
 
 export interface IamAccountRow extends AppUserDto {
   primaryRoleName: string | null;
@@ -13,7 +17,7 @@ export interface IamAccountRow extends AppUserDto {
 @Component({
   selector: 'app-iam-accounts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableGridComponent],
+  imports: [CommonModule, FormsModule, TableGridComponent, ModalComponent, ConfirmationModalComponent],
   template: `
     <div class="flex flex-col h-full">
       <div class="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
@@ -51,6 +55,56 @@ export interface IamAccountRow extends AppUserDto {
           (pageRequest)="onPageRequest($event)">
         </app-table-grid>
       </div>
+
+      <!-- Modal Invocation -->
+      <app-modal
+        [isOpen]="showUserModal"
+        [title]="'Edit User: ' + modalUser?.userName"
+        (cancel)="onModalCancel()"
+        (submit)="onModalSubmit()"
+      >
+        <!-- Project whatever form or content you need: -->
+        <form *ngIf="modalUser" #modalForm="ngForm" class="space-y-4">
+          <div>
+            <label class="block text-sm">First Name</label>
+            <input
+              [(ngModel)]="modalUser!.firstName"
+              name="firstName"
+              required
+              class="w-full border rounded px-2 py-1"
+            />
+          </div>
+          <div>
+            <label class="block text-sm">Last Name</label>
+            <input
+              [(ngModel)]="modalUser!.lastName"
+              name="lastName"
+              required
+              class="w-full border rounded px-2 py-1"
+            />
+          </div>
+        </form>
+
+        <app-confirmation-modal
+          [isOpen]="showConfirmModal"
+          [title]="'Confirm Update'"
+          [message]="'Are you sure you want to apply changes to this user?'"
+          [confirmText]="'Yes, update'"
+          [cancelText]="'Cancel'"
+          (confirm)="onConfirmUpdate()"
+          (cancel)="onCancelUpdate()"
+        />
+      </app-modal>
+
+      <app-confirmation-modal
+        [isOpen]="showDeleteConfirmModal"
+        [title]="'Confirm Deletion'"
+        [message]="'Are you sure you want to delete user ' + pendingDeleteUser?.userName + '?'"
+        [confirmText]="'Yes, delete'"
+        [cancelText]="'Cancel'"
+        (confirm)="onConfirmDelete()"
+        (cancel)="onCancelDelete()"
+      />
     </div>
   `
 })
@@ -64,6 +118,16 @@ export class IamAccountsPageComponent implements OnInit {
   page = 1;
   pageSize = 20;
   total = 0;
+
+  // Modal state
+  showUserModal = false;
+  modalUser?: IamAccountRow;
+  showConfirmModal = false;
+  pendingUpdateDto: UpdateAppUserDetailsDto | null = null;
+
+  showDeleteConfirmModal = false;
+  pendingDeleteUser?: IamAccountRow;
+
 
   private roleNameMap = new Map<string, string>();
 
@@ -79,6 +143,7 @@ export class IamAccountsPageComponent implements OnInit {
       { field: 'lastName', label: 'Last Name', sortable: true, width: '200px' },
       { field: 'email', label: 'Email', sortable: true },
       { field: 'userName', label: 'Username', sortable: true },
+      { field: 'primaryRoleId', label: 'Role ID', hidden: true, sortable: true, width: '120px' },
       { field: 'primaryRoleName', label: 'Role', sortable: true, width: '96px' },
     ],
     actions: {
@@ -183,14 +248,69 @@ export class IamAccountsPageComponent implements OnInit {
   }
 
   editUser(user: IamAccountRow) {
-    alert(`Edit user: ${user.userName}`);
+    this.modalUser = { ...user };
+    this.showUserModal = true;
   }
 
   deleteUser(user: IamAccountRow) {
-    if (!confirm(`Delete user "${user.userName}"? This cannot be undone.`)) return;
-    this.iamServiceCollection.accountService.delete(user.id).subscribe({
-      next: () => this.refreshData(),
-      error: () => alert('Failed to delete user.')
+    this.pendingDeleteUser = user;
+    this.showDeleteConfirmModal = true;
+  }
+
+  onConfirmDelete() {
+    if (!this.pendingDeleteUser) return;
+
+    this.iamServiceCollection.accountService.delete(this.pendingDeleteUser.id).subscribe({
+      next: () => {
+        this.showDeleteConfirmModal = false;
+        this.pendingDeleteUser = undefined;
+        this.refreshData();
+      },
+      error: () => {
+        this.showDeleteConfirmModal = false;
+        alert('Failed to delete user.');
+      }
     });
   }
+
+  onCancelDelete() {
+    this.showDeleteConfirmModal = false;
+    this.pendingDeleteUser = undefined;
+  }
+
+  onModalCancel() {
+    this.showUserModal = false;
+  }
+
+  onModalSubmit() {
+    if (!this.modalUser) return;
+
+    this.pendingUpdateDto = AccountService.mapDtoToUpdateDto(this.modalUser);
+    this.showConfirmModal = true;
+  }
+
+
+  onConfirmUpdate() {
+    if (!this.pendingUpdateDto) return;
+
+    this.iamServiceCollection.accountService
+      .update(this.pendingUpdateDto.id, this.pendingUpdateDto)
+      .subscribe({
+        next: () => {
+          this.showUserModal = false;
+          this.showConfirmModal = false;
+          this.pendingUpdateDto = null;
+          this.refreshData();
+        },
+        error: () => alert('Update failed'),
+      });
+  }
+
+  onCancelUpdate() {
+    this.showConfirmModal = false;
+    this.pendingUpdateDto = null;
+  }
+
 }
+
+

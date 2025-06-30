@@ -186,4 +186,29 @@ export class AccountService {
       isInitialPasswordChanged: false
     };
   }
+
+  static mapDtoToUpdateDto(user: AppUserDto): UpdateAppUserDetailsDto {
+    return {
+      id: user.id,
+      userName: user.userName,
+      email: user.email,
+      phoneNumber: null,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      dateOfBirth: null
+    };
+  }
+
+  static mapDetailedToUpdateDto(user: AppUserDetailedDto): UpdateAppUserDetailsDto {
+    return {
+      id: user.id,
+      userName: user.userName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      dateOfBirth: user.dateOfBirth,
+    };
+  }
+
 }
