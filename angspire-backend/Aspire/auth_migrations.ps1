@@ -3,12 +3,12 @@
 USAGE
   PowerShell:
     # From repo root (where the csproj paths below resolve)
-    .\scripts\auth_migrations.ps1 -Action add -Name InitialAuth -Profile hostdev
-    .\scripts\auth_migrations.ps1 -Action update -Profile hostdev
-    .\scripts\auth_migrations.ps1 -Action list
-    .\scripts\auth_migrations.ps1 -Action remove
-    .\scripts\auth_migrations.ps1 -Action drop
-    .\scripts\auth_migrations.ps1 -Action reset -Profile local
+    .\auth_migrations.ps1 -Action add -Name InitialAuth -Profile hostdev
+    .\auth_migrations.ps1 -Action update -Profile hostdev
+    .\auth_migrations.ps1 -Action list
+    .\auth_migrations.ps1 -Action remove
+    .\auth_migrations.ps1 -Action drop
+    .\auth_migrations.ps1 -Action reset -Profile local
 
 ACTIONS
   -Action add    : Add a new migration (requires -Name)
