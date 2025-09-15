@@ -1,0 +1,286 @@
+/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+@import "prismjs/themes/prism.css";
+
+/* styles.css or component styles */
+
+:root {
+  /* npm run theme update */
+  /* Theme START */
+  --dark: #18181B;
+  --light: #FAFAFA;
+
+  --background: #242325;   /* off-white, clean background */
+  --foreground: #fafafa;   /* charcoal, main text & icons */
+
+  --primary: #d4d4d8;    /* deep charcoal for main text / strong UI */
+  --secondary: #71717a;  /* soft gray for surfaces / section bg */
+  --accent: #EF4444;     /* bold red for CTAs, alerts */
+  --support: #F59E0B;    /* amber for highlights, warnings */
+  --neutral: #FCFCFC;    /* off-white for base background */
+
+  --success: #10b981;
+  --success-contrast: #fff;
+
+  --warning: #F8D863;
+  --warning-contrast: #CB7A10;
+
+  --error: #ef4444;
+  --error-contrast: #fff;
+  
+  --info: #2563eb;
+  --info-contrast: #fff;
+
+  --scrollbar-track: #f4f4f5;
+  --scrollbar-thumb: #c4c4c4;
+  /* Theme END */
+}
+
+@theme {
+  /* Theme START */
+
+  --color-dark: var(--dark);
+  --color-light: var(--light);
+
+  --color-background: var(--background);   /* off-white, clean background */
+  --color-foreground: var(--foreground);   /* charcoal, main text & icons */
+
+  --color-primary: var(--primary);    /* deep charcoal for main text / strong UI */
+  --color-secondary: var(--secondary);  /* soft gray for surfaces / section bg */
+  --color-accent: var(--accent);     /* bold red for CTAs, alerts */
+  --color-support: var(--support);    /* amber for highlights, warnings */
+  --color-neutral: var(--neutral);    /* off-white for base background */
+
+  --color-success: var(--success);
+  --color-success-contrast: var(--success-contrast);
+
+  --color-warning: var(--warning);
+  --color-warning-contrast: var(--warning-contrast);
+
+  --color-error: var(--error);
+  --color-error-contrast: var(--error-contrast);
+
+  --color-info: var(--info);
+  --color-info-contrast: var(--info-contrast);
+
+  --color-scrollbar-track: var(--scrollbar-track);
+  --color-scrollbar-thumb: var(--scrollbar-thumb);
+/* Theme END */
+}
+
+/* Enable scrollbar styling */
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-secondary) transparent !important;
+}
+
+.scrollbar-gutter {
+  scrollbar-gutter: stable;
+}
+
+/* For Chrome, Edge, Safari */
+.scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+.scrollbar-gutter::-webkit-scrollbar {
+  scrollbar-gutter: stable;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--color-scrollbar-thumb);
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-scrollbar-thumb-hover);
+}
+.scrollbar::-webkit-scrollbar-track {
+  background: var(--color-scrollbar-track);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.scrollbar::-webkit-scrollbar-track:hover {
+  background: var(--color-scrollbar-track-hover);
+}
+.scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Thumb color variants */
+.scrollbar-thumb-primary::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary) !important;
+}
+.scrollbar-thumb-primary::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-secondary) !important;
+}
+.scrollbar-thumb-accent::-webkit-scrollbar-thumb {
+  background-color: var(--color-accent) !important;
+}
+.scrollbar-thumb-accent::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-accent-dark) !important;
+}
+.scrollbar-thumb-dark::-webkit-scrollbar-thumb {
+  background-color: var(--color-dark) !important;
+}
+.scrollbar-thumb-dark::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-tertiary) !important;
+}
+
+/* Track color variants */
+.scrollbar-track-light::-webkit-scrollbar-track {
+  background: var(--color-light) !important;
+}
+.scrollbar-track-light::-webkit-scrollbar-track:hover {
+  background: var(--color-primary) !important;
+}
+.scrollbar-track-dark::-webkit-scrollbar-track {
+  background: var(--color-dark) !important;
+}
+.scrollbar-track-dark::-webkit-scrollbar-track:hover {
+  background: var(--color-tertiary) !important;
+}
+
+/* Transparent track utility */
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.scrollbar-track-transparent::-webkit-scrollbar-track:hover {
+  background: transparent !important;
+}
+
+button:not(:disabled), 
+[type="button"]:not(:disabled), 
+[type="submit"]:not(:disabled), 
+[type="reset"]:not(:disabled) {
+  cursor: pointer !important;
+}
+
+/* Chat markdown styling */
+.chat-markdown-root {
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+/* Paragraphs: only bottom margin, gap-2 = 0.5rem */
+.chat-markdown-root p {
+  margin-top: 0 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Headings: no ems, only bottom margin, all consistent */
+.chat-markdown-root h1,
+.chat-markdown-root h2,
+.chat-markdown-root h3,
+.chat-markdown-root h4,
+.chat-markdown-root h5,
+.chat-markdown-root h6 {
+  margin-top: 1em !important;
+  margin-bottom: 0.8em !important;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.chat-markdown-root h1 { font-size: 2rem; }
+.chat-markdown-root h2 { font-size: 1.5rem; }
+.chat-markdown-root h3 { font-size: 1.25rem; }
+.chat-markdown-root h4 { font-size: 1.1rem; }
+.chat-markdown-root h5 { font-size: 1rem; }
+.chat-markdown-root h6 { font-size: 0.95rem; }
+
+/* Lists */
+.chat-markdown-root ul,
+.chat-markdown-root ol {
+  padding-left: 1.6rem !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.5rem !important;
+  list-style-position: outside;       /* ensure marker sits outside */
+}
+
+/* Restore markers */
+.chat-markdown-root ul { list-style-type: disc; }
+.chat-markdown-root ol { list-style-type: decimal; }
+
+/* Nested list styles (optional) */
+.chat-markdown-root ul ul   { list-style-type: circle; }
+.chat-markdown-root ul ul ul{ list-style-type: square; }
+
+/* Marker color (optional, matches your theme) */
+.chat-markdown-root li::marker {
+  color: var(--color-tertiary);
+}
+
+
+/* Blockquotes: compact */
+.chat-markdown-root blockquote {
+  border-left: 4px solid var(--color-secondary);
+  background: var(--color-light);
+  color: var(--color-tertiary);
+  margin: 0.25rem 0 !important;
+  padding: 0.15rem 0.4rem;
+  font-style: italic;
+  border-radius: 0.25em;
+}
+
+/* Paragraphs inside blockquote: even tighter */
+.chat-markdown-root blockquote p {
+  margin: 0.15rem 0 !important;
+}
+
+/* Inline code */
+.chat-markdown-root code {
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.96em;
+}
+
+/* Pre/code blocks */
+.chat-markdown-root pre code {
+  display: block;
+  border-radius: 8px;
+  font-size: 0.97em;
+  line-height: 1.55;
+}
+.chat-markdown-root pre {
+  margin: 0.75rem 0 !important;
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+/* Images */
+.chat-markdown-root img {
+  max-width: 100%;
+  display: block;
+  margin: 0.5rem 0 !important;
+  border-radius: 4px;
+}
+
+/* Tables */
+.chat-markdown-root table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1rem !important;
+}
+.chat-markdown-root th,
+.chat-markdown-root td {
+  border: none;
+  border-bottom: 1px solid var(--color-secondary);
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+.chat-markdown-root th {
+  font-weight: bold;
+  border-bottom: 2.5px solid var(--color-tertiary);
+  text-align: left;
+}
+.chat-markdown-root tr:last-child td {
+  border-bottom: none;
+}
+
+/* Horizontal rule */
+.chat-markdown-root hr {
+  margin: 1.8rem 0 !important;       /* vertical margin */
+  border: none;
+  border-top: 1px solid;
+  opacity: 0.25;
+}

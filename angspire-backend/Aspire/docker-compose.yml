@@ -1,0 +1,95 @@
+name: angspire-datastack
+
+networks:
+  angspire-net:
+    driver: bridge
+
+volumes:
+  angspire_auth_data:
+  angspire_domain_data:
+  angspire_minio_data:
+
+services:
+  # -------------------------
+  # PostgreSQL (Auth) > angspire_auth
+  # -------------------------
+  angspire-auth:
+    image: postgres:16
+    container_name: angspire-auth
+    networks: [angspire-net]
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: angspire_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d angspire_auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - angspire_auth_data:/var/lib/postgresql/data
+
+  # -------------------------
+  # MongoDB (App Domain) > angspire_domain
+  # -------------------------
+  angspire-domain:
+    image: mongo:7
+    container_name: angspire-domain
+    networks: [angspire-net]
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: angspire_domain
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - angspire_domain_data:/data/db
+
+  # -------------------------
+  # MinIO (S3-compatible file storage)
+  # -------------------------
+  angspire-minio:
+    image: minio/minio:latest
+    container_name: angspire-minio
+    networks: [angspire-net]
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: adminadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # Web console
+    volumes:
+      - angspire_minio_data:/data
+    healthcheck:
+      # If curl isn't present in your image, swap this for wget or remove the healthcheck.
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # One-shot init to create the bucket `angspire-files`
+  angspire-minio-init:
+    image: minio/mc:latest
+    container_name: angspire-minio-init
+    networks: [angspire-net]
+    depends_on:
+      angspire-minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c '
+      echo "Waiting for MinIO @ angspire-minio:9000...";
+      until mc alias set local http://angspire-minio:9000 admin adminadmin >/dev/null 2>&1; do
+        sleep 2;
+      done;
+      echo "MinIO is up.";
+      mc mb --ignore-existing local/angspire-files;
+      mc anonymous set download local/angspire-files;
+      echo "MinIO bucket ensured: angspire-files";
+      '
+    restart: "no"

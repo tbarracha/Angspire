@@ -1,0 +1,15 @@
+{
+  "Kind": "started",
+  "TimestampUtc": "2025-09-15T18:08:13.0904828Z",
+  "Source": null,
+  "Note": null,
+  "ExitCode": null,
+  "Exception": null,
+  "Environment": {
+    "Machine": "HP",
+    "OS": "Microsoft Windows 10.0.26100",
+    "Framework": ".NET 9.0.5",
+    "ProcessId": 31360,
+    "CommandLine": "C:\\Users\\PC\\Documents\\GitHub\\Genspire\\Apps\\Backend\\Aspire\\Host\\bin\\Debug\\net9.0\\Host.dll"
+  }
+}
