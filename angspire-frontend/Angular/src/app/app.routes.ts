@@ -5,26 +5,57 @@ import { RegisterPageComponent } from './features/authentication/pages/register-
 import {
   redirectIfAuthenticatedCanMatch,
   authRequiredCanMatch,
-  authRequiredCanActivate
 } from './modules/authentication/services/auth.guards';
+import { HomePageComponent } from './features/home/home-page.component';
+
+// Components gallery (public)
+import { BrowseComponentsPage } from './features/browse-components/browse-components.page';
+import { ButtonDemoPage } from './features/browse-components/demos/ui-primitives/button-demo.page';
+import { SelectDemoPage } from './features/browse-components/demos/ui-primitives/select-demo.page';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'workspace', pathMatch: 'full' },
-  { path: 'home', redirectTo: 'workspace', pathMatch: 'full' },
+  /** 1) Default for authenticated users -> Home page */
+  {
+    path: '',
+    pathMatch: 'full',
+    canMatch: [authRequiredCanMatch],
+    component: HomePageComponent,
+  },
 
-  // Public
+  /** 2) Default for guests -> Login (wrapped in Auth layout) */
+  {
+    path: '',
+    pathMatch: 'full',
+    component: AuthLayoutComponent,
+    canMatch: [redirectIfAuthenticatedCanMatch],
+    children: [{ path: '', component: LoginPageComponent }],
+  },
+
+  /** Public auth pages */
   {
     path: 'login',
     component: AuthLayoutComponent,
     canMatch: [redirectIfAuthenticatedCanMatch],
-    children: [{ path: '', component: LoginPageComponent }]
+    children: [{ path: '', component: LoginPageComponent }],
   },
   {
     path: 'register',
     component: AuthLayoutComponent,
     canMatch: [redirectIfAuthenticatedCanMatch],
-    children: [{ path: '', component: RegisterPageComponent }]
+    children: [{ path: '', component: RegisterPageComponent }],
   },
 
-  // { path: '**', redirectTo: 'workspace' } // optional 404
+  /** Public components gallery (no auth) */
+  {
+    path: 'components',
+    component: BrowseComponentsPage,
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'button' },
+      { path: 'button', component: ButtonDemoPage },
+      { path: 'select', component: SelectDemoPage },
+    ],
+  },
+
+  /** Fallback */
+  { path: '**', redirectTo: '' },
 ];

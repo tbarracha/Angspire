@@ -1,3 +1,8 @@
+# in the folder with docker-compose.yml
+# docker compose up -d
+
+# This sets the "bundle" (compose project) name.
+# You can also override it with:  docker compose -p myname up
 name: angspire-datastack
 
 networks:

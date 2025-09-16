@@ -1,4 +1,4 @@
-// chat-textarea.component.ts (drop-in replacement of the class body shown)
+// textarea.component.ts (drop-in replacement of the class body shown)
 
 import {
   Component, Input, Output, EventEmitter, ViewChild, ElementRef, AfterViewInit
@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
 type TextareaAppearance = 'default' | 'plain';
 
 @Component({
-  selector: 'app-chat-textarea',
+  selector: 'app-textarea',
   standalone: true,
   imports: [CommonModule],
   template: `
@@ -25,7 +25,7 @@ type TextareaAppearance = 'default' | 'plain';
     ></textarea>
   `
 })
-export class ChatTextareaComponent implements AfterViewInit {
+export class TextareaComponent implements AfterViewInit {
   @ViewChild('ta') private ta!: ElementRef<HTMLTextAreaElement>;
 
   @Input() disabled = false;

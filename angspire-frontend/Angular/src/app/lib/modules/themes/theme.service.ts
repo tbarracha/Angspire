@@ -87,6 +87,53 @@ export class ThemeService {
     else console.error('[ThemeService] Theme not found:', themeName);
   }
 
+  setThemes(themes: Theme[]) {
+    this.themes = Array.isArray(themes) ? themes.slice() : [];
+  }
+
+  addTheme(t: Theme) {
+    if (!t?.name || !t?.colors) return;
+    const existing = this.findByName(t.name);
+    if (existing) {
+      console.warn('[ThemeService] Theme exists, choose another name:', t.name);
+      return;
+    }
+    this.themes.push(t);
+  }
+
+  updateTheme(name: string, next: Theme) {
+    const idx = this.themes.findIndex(x => (x.name ?? '').toLowerCase() === (name ?? '').toLowerCase());
+    if (idx >= 0) this.themes[idx] = next;
+  }
+
+  deleteTheme(name: string) {
+    this.themes = this.themes.filter(x => (x.name ?? '').toLowerCase() !== (name ?? '').toLowerCase());
+    // if we deleted the active theme, fallback to the first available
+    if ((this.currentTheme?.name ?? '').toLowerCase() === (name ?? '').toLowerCase()) {
+      const fallback = this.themes[0];
+      if (fallback) this.applyTheme(fallback, true);
+    }
+  }
+
+  /** Export/import helpers for UI */
+  exportThemesJson(): string {
+    return JSON.stringify(this.themes, null, 2);
+  }
+
+  importThemesJson(json: string) {
+    try {
+      const arr = JSON.parse(json) as Theme[];
+      if (!Array.isArray(arr)) throw new Error('Invalid themes.json shape');
+      this.setThemes(arr);
+      // preserve current theme if still exists, else apply first
+      const savedName = this.loadSavedThemeName();
+      const target = (savedName && this.findByName(savedName)) || this.themes[0];
+      if (target) this.applyTheme(target, true);
+    } catch (e) {
+      console.error('[ThemeService] importThemesJson failed:', e);
+    }
+  }
+
   private findByName(name: string): Theme | undefined {
     const n = (name ?? '').toLowerCase();
     return this.themes.find(t => (t.name ?? '').toLowerCase() === n);
@@ -197,8 +244,16 @@ export class ThemeService {
   }
 
   private parseRgb(rgbString: string): [number, number, number] {
-    const match = rgbString.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-    return match ? [parseInt(match[1]), 10,][0] ? [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)] : [0, 0, 0] : [0, 0, 0];
+    // Accepts rgb(...) or hex (fallback)
+    if (rgbString.startsWith('#')) {
+      return this.hexToRgb(rgbString);
+    }
+    const match = rgbString.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+    if (match) {
+      return [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)];
+    }
+    // Fallback: try to compute style (if empty) → default black
+    return [0, 0, 0];
   }
 
   private camelToKebab(str: string): string {

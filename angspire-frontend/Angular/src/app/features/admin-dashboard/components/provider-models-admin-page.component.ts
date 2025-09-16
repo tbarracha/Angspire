@@ -23,7 +23,7 @@ import type {
   OptionListGroup,
   OptionListConfig
 } from '../../../lib/components/ui/option-list-components/option-item.model';
-import { InputComponent } from '../../../lib/components/ui/input-components/input.component';
+import { InputComponent } from '../../../lib/components/ui-primitives/input.component';
 
 
 import { finalize } from 'rxjs';

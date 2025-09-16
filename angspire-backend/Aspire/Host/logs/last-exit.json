@@ -1,6 +1,6 @@
 {
   "Kind": "started",
-  "TimestampUtc": "2025-09-15T18:08:13.0904828Z",
+  "TimestampUtc": "2025-09-16T11:04:43.2233347Z",
   "Source": null,
   "Note": null,
   "ExitCode": null,
@@ -9,7 +9,7 @@
     "Machine": "HP",
     "OS": "Microsoft Windows 10.0.26100",
     "Framework": ".NET 9.0.5",
-    "ProcessId": 31360,
-    "CommandLine": "C:\\Users\\PC\\Documents\\GitHub\\Genspire\\Apps\\Backend\\Aspire\\Host\\bin\\Debug\\net9.0\\Host.dll"
+    "ProcessId": 32580,
+    "CommandLine": "C:\\Users\\PC\\Documents\\GitHub\\angspire\\angspire-backend\\Aspire\\Host\\bin\\Debug\\net9.0\\Host.dll"
   }
 }

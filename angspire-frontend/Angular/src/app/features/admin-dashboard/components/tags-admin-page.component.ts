@@ -8,7 +8,7 @@ import {
   TableGridAction
 } from '../../../lib/components/ui/table-component/table-grid.component';
 
-import { InputComponent } from '../../../lib/components/ui/input-components/input.component';
+import { InputComponent } from '../../../lib/components/ui-primitives/input.component';
 import { MODAL_CLOSE, ModalService } from '../../../lib/components/ui/modal-components/modal.service';
 
 

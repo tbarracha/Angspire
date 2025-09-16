@@ -22,16 +22,16 @@ export interface SmartOverlayHandle<T> {
 
 export type PositionKey =
   | 'bottom' | 'bottom-start' | 'bottom-end'
-  | 'top'    | 'top-start'    | 'top-end'
-  | 'right'  | 'right-start'  | 'right-end'
-  | 'left'   | 'left-start'   | 'left-end';
+  | 'top' | 'top-start' | 'top-end'
+  | 'right' | 'right-start' | 'right-end'
+  | 'left' | 'left-start' | 'left-end';
 
 @Injectable({ providedIn: 'root' })
 export class SmartOverlayService {
   private readonly GAP = 4;
   private openMap = new Map<unknown, SmartOverlayHandle<unknown>>();
 
-  constructor(private overlay: Overlay) {}
+  constructor(private overlay: Overlay) { }
 
   /* ------------------- PUBLIC helpers ------------------- */
 
@@ -107,7 +107,7 @@ export class SmartOverlayService {
       scrollStrategy: this.overlay.scrollStrategies.reposition(),
     } as OverlayConfig);
 
-    const portal  = new ComponentPortal(component, null, this._wrapData(envInjector, cfg.data));
+    const portal = new ComponentPortal(component, null, this._wrapData(envInjector, cfg.data));
     const compRef = overlayRef.attach(portal);
 
     let handle!: SmartOverlayHandle<T>;
@@ -134,6 +134,14 @@ export class SmartOverlayService {
     return handle;
   }
 
+  openSimple<T>(anchor: HTMLElement, component: Type<T>, env: EnvironmentInjector, data?: Partial<T>) {
+    return this.open(anchor, component, env, {
+      position: ['bottom-end', 'bottom-start', 'top-end', 'top-start'],
+      panelClass: ['rounded-2xl', 'border', 'bg-transparent', 'p-0'],
+      data
+    });
+  }
+
   /* ------------------- Helpers ------------------- */
   private _wrapData(inj: EnvironmentInjector, data: any): Injector {
     return Injector.create({
@@ -145,39 +153,39 @@ export class SmartOverlayService {
   private _resolvePositions(pos?: PositionKey | PositionKey[]): ConnectedPosition[] {
     const p = this.GAP;
     const base: Record<PositionKey, ConnectedPosition> = {
-      'bottom':       { originX: 'center', originY: 'bottom', overlayX: 'center', overlayY: 'top',    offsetY:  p },
-      'bottom-start': { originX: 'start',  originY: 'bottom', overlayX: 'start',  overlayY: 'top',    offsetY:  p },
-      'bottom-end':   { originX: 'end',    originY: 'bottom', overlayX: 'end',    overlayY: 'top',    offsetY:  p },
+      'bottom': { originX: 'center', originY: 'bottom', overlayX: 'center', overlayY: 'top', offsetY: p },
+      'bottom-start': { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: p },
+      'bottom-end': { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: p },
 
-      'top':          { originX: 'center', originY: 'top',    overlayX: 'center', overlayY: 'bottom', offsetY: -p },
-      'top-start':    { originX: 'start',  originY: 'top',    overlayX: 'start',  overlayY: 'bottom', offsetY: -p },
-      'top-end':      { originX: 'end',    originY: 'top',    overlayX: 'end',    overlayY: 'bottom', offsetY: -p },
+      'top': { originX: 'center', originY: 'top', overlayX: 'center', overlayY: 'bottom', offsetY: -p },
+      'top-start': { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -p },
+      'top-end': { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -p },
 
-      'right':        { originX: 'end',    originY: 'center', overlayX: 'start',  overlayY: 'center', offsetX:  p },
-      'right-start':  { originX: 'end',    originY: 'top',    overlayX: 'start',  overlayY: 'top',    offsetX:  p },
-      'right-end':    { originX: 'end',    originY: 'bottom', overlayX: 'start',  overlayY: 'bottom', offsetX:  p },
+      'right': { originX: 'end', originY: 'center', overlayX: 'start', overlayY: 'center', offsetX: p },
+      'right-start': { originX: 'end', originY: 'top', overlayX: 'start', overlayY: 'top', offsetX: p },
+      'right-end': { originX: 'end', originY: 'bottom', overlayX: 'start', overlayY: 'bottom', offsetX: p },
 
-      'left':         { originX: 'start',  originY: 'center', overlayX: 'end',    overlayY: 'center', offsetX: -p },
-      'left-start':   { originX: 'start',  originY: 'top',    overlayX: 'end',    overlayY: 'top',    offsetX: -p },
-      'left-end':     { originX: 'start',  originY: 'bottom', overlayX: 'end',    overlayY: 'bottom', offsetX: -p },
+      'left': { originX: 'start', originY: 'center', overlayX: 'end', overlayY: 'center', offsetX: -p },
+      'left-start': { originX: 'start', originY: 'top', overlayX: 'end', overlayY: 'top', offsetX: -p },
+      'left-end': { originX: 'start', originY: 'bottom', overlayX: 'end', overlayY: 'bottom', offsetX: -p },
     };
 
     const fallbacks: Record<PositionKey, PositionKey[]> = {
-      'bottom':       ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end'],
+      'bottom': ['bottom', 'bottom-start', 'bottom-end', 'top', 'top-start', 'top-end'],
       'bottom-start': ['bottom-start', 'bottom-end', 'bottom', 'top-start', 'top-end', 'top'],
-      'bottom-end':   ['bottom-end', 'bottom-start', 'bottom', 'top-end', 'top-start', 'top'],
+      'bottom-end': ['bottom-end', 'bottom-start', 'bottom', 'top-end', 'top-start', 'top'],
 
-      'top':          ['top', 'top-start', 'top-end', 'bottom', 'bottom-start', 'bottom-end'],
-      'top-start':    ['top-start', 'top-end', 'top', 'bottom-start', 'bottom-end', 'bottom'],
-      'top-end':      ['top-end', 'top-start', 'top', 'bottom-end', 'bottom-start', 'bottom'],
+      'top': ['top', 'top-start', 'top-end', 'bottom', 'bottom-start', 'bottom-end'],
+      'top-start': ['top-start', 'top-end', 'top', 'bottom-start', 'bottom-end', 'bottom'],
+      'top-end': ['top-end', 'top-start', 'top', 'bottom-end', 'bottom-start', 'bottom'],
 
-      'right':        ['right', 'right-start', 'right-end', 'left', 'left-start', 'left-end'],
-      'right-start':  ['right-start', 'right-end', 'right', 'left-start', 'left-end', 'left'],
-      'right-end':    ['right-end', 'right-start', 'right', 'left-end', 'left-start', 'left'],
+      'right': ['right', 'right-start', 'right-end', 'left', 'left-start', 'left-end'],
+      'right-start': ['right-start', 'right-end', 'right', 'left-start', 'left-end', 'left'],
+      'right-end': ['right-end', 'right-start', 'right', 'left-end', 'left-start', 'left'],
 
-      'left':         ['left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'],
-      'left-start':   ['left-start', 'left-end', 'left', 'right-start', 'right-end', 'right'],
-      'left-end':     ['left-end', 'left-start', 'left', 'right-end', 'right-start', 'right'],
+      'left': ['left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'],
+      'left-start': ['left-start', 'left-end', 'left', 'right-start', 'right-end', 'right'],
+      'left-end': ['left-end', 'left-start', 'left', 'right-end', 'right-start', 'right'],
     };
 
     let order: PositionKey[];

@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IconEyeOnComponent } from "../../../../features/icons/components/icon-eyeOn.component";
-import { IconEyeOffComponent } from "../../../../features/icons/components/icon-eyeOff.component";
+import { IconEyeOnComponent } from "../../../features/icons/components/icon-eyeOn.component";
+import { IconEyeOffComponent } from "../../../features/icons/components/icon-eyeOff.component";
 
 export type InputType = 'text' | 'password' | 'secret' | 'email' | 'number';
 
