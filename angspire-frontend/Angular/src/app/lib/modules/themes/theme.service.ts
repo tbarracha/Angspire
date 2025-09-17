@@ -11,6 +11,7 @@ export class ThemeService {
   private activeIntervals: Map<string, number> = new Map();
 
   static readonly themeChanged: EventEmitter<Theme> = new EventEmitter<Theme>();
+  static readonly themesChanged: EventEmitter<Theme[]> = new EventEmitter<Theme[]>();
 
   // was field-initialized; move to ctor
   private themesUrl!: string;
@@ -89,30 +90,59 @@ export class ThemeService {
 
   setThemes(themes: Theme[]) {
     this.themes = Array.isArray(themes) ? themes.slice() : [];
+    this.notifyThemesChanged();
   }
 
   addTheme(t: Theme) {
     if (!t?.name || !t?.colors) return;
-    const existing = this.findByName(t.name);
-    if (existing) {
-      console.warn('[ThemeService] Theme exists, choose another name:', t.name);
-      return;
-    }
-    this.themes.push(t);
+    if (this.findByName(t.name)) { console.warn('[ThemeService] Theme exists:', t.name); return; }
+    this.themes.push({ ...t, colors: { ...t.colors } });
+    this.notifyThemesChanged();
   }
 
   updateTheme(name: string, next: Theme) {
     const idx = this.themes.findIndex(x => (x.name ?? '').toLowerCase() === (name ?? '').toLowerCase());
-    if (idx >= 0) this.themes[idx] = next;
+    if (idx < 0) return;
+
+    // replace item
+    this.themes[idx] = { ...next, colors: { ...next.colors } };
+
+    // if we updated the current theme (by previous name), sync ref and re-apply CSS
+    const isCurrent = (this.currentTheme?.name ?? '').toLowerCase() === (name ?? '').toLowerCase();
+    if (isCurrent) {
+      this.currentTheme = this.themes[idx];
+      // live-apply changed vars
+      Object.entries(this.currentTheme.colors).forEach(([k, v]) => this.setCssVariable(this.toCssVarName(k), v));
+      // keep attribute & storage in sync with new name
+      this.root.setAttribute('data-theme', this.currentTheme.name);
+      this.saveCurrentThemeName(this.currentTheme.name);
+      ThemeService.themeChanged.emit(this.currentTheme);
+    }
+
+    this.notifyThemesChanged();
+  }
+
+  renameTheme(oldName: string, newName: string): boolean {
+    const srcIdx = this.themes.findIndex(t => (t.name ?? '').toLowerCase() === (oldName ?? '').toLowerCase());
+    if (srcIdx < 0) return false;
+    const normalized = (newName ?? '').trim();
+    if (!normalized) return false;
+    const dup = this.findByName(normalized);
+    if (dup && dup !== this.themes[srcIdx]) return false; // don’t clobber an existing different theme
+
+    const next = { ...this.themes[srcIdx], name: normalized };
+    this.updateTheme(oldName, next); // handles current + emits
+    return true;
   }
 
   deleteTheme(name: string) {
+    const wasCurrent = (this.currentTheme?.name ?? '').toLowerCase() === (name ?? '').toLowerCase();
     this.themes = this.themes.filter(x => (x.name ?? '').toLowerCase() !== (name ?? '').toLowerCase());
-    // if we deleted the active theme, fallback to the first available
-    if ((this.currentTheme?.name ?? '').toLowerCase() === (name ?? '').toLowerCase()) {
+    if (wasCurrent) {
       const fallback = this.themes[0];
       if (fallback) this.applyTheme(fallback, true);
     }
+    this.notifyThemesChanged();
   }
 
   /** Export/import helpers for UI */
@@ -125,7 +155,6 @@ export class ThemeService {
       const arr = JSON.parse(json) as Theme[];
       if (!Array.isArray(arr)) throw new Error('Invalid themes.json shape');
       this.setThemes(arr);
-      // preserve current theme if still exists, else apply first
       const savedName = this.loadSavedThemeName();
       const target = (savedName && this.findByName(savedName)) || this.themes[0];
       if (target) this.applyTheme(target, true);
@@ -140,24 +169,18 @@ export class ThemeService {
   }
 
   private applyTheme(theme: Theme, save: boolean): void {
-    if (!theme || !theme.colors) {
-      console.error('[ThemeService] Invalid theme payload:', theme?.name);
-      return;
-    }
+    if (!theme || !theme.colors) { console.error('[ThemeService] Invalid theme payload:', theme?.name); return; }
     if (this.currentTheme?.name === theme.name) {
-      // Already applied
+      // still re-apply colors in case they changed
+      Object.entries(theme.colors).forEach(([k, v]) => this.setCssVariable(this.toCssVarName(k), v));
+      if (save) this.saveCurrentThemeName(theme.name);
+      ThemeService.themeChanged.emit(theme);
       return;
     }
 
     this.currentTheme = theme;
-    // (Optional) expose current theme name for CSS selectors
     this.root.setAttribute('data-theme', theme.name);
-
-    // Set CSS vars
-    Object.entries(theme.colors).forEach(([key, value]) => {
-      const cssVariable = `--${this.camelToKebab(key)}`;
-      this.setCssVariable(cssVariable, value);
-    });
+    Object.entries(theme.colors).forEach(([k, v]) => this.setCssVariable(this.toCssVarName(k), v));
 
     if (save) this.saveCurrentThemeName(theme.name);
     ThemeService.themeChanged.emit(this.currentTheme);
@@ -179,6 +202,12 @@ export class ThemeService {
     this.currentTheme = theme;
     this.saveCurrentThemeName(theme.name);
     ThemeService.themeChanged.emit(this.currentTheme);
+  }
+
+  private notifyThemesChanged() {
+    // reassign array to trigger change detection by ref
+    this.themes = [...this.themes];
+    ThemeService.themesChanged.emit(this.themes);
   }
 
   private setCssVariable(cssVariable: string, value: string): void {
@@ -231,6 +260,12 @@ export class ThemeService {
 
   private getCssVariable(cssVariable: string): string {
     return getComputedStyle(this.root).getPropertyValue(cssVariable).trim();
+  }
+
+  private toCssVarName(key: string) {
+    // accept 'primaryColor' or 'primary-color'
+    const kebab = key.includes('-') ? key : this.camelToKebab(key);
+    return `--${kebab}`;
   }
 
   private lerp(start: number, end: number, t: number): number {

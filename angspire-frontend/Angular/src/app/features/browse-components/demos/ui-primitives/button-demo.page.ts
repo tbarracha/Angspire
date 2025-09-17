@@ -21,17 +21,17 @@ import { ButtonComponent } from '../../../../lib/components/ui-primitives/button
         <!-- Preview -->
         <div class="rounded-lg p-4 bg-primay mb-3">
           <div class="flex gap-2">
-            <app-button color="#2563eb">Filled</app-button>
-            <app-button color="#2563eb" styleIdle="outlined">Outlined</app-button>
-            <app-button color="#2563eb" styleIdle="text" styleHover="ringed">Text → Ringed</app-button>
+            <app-button color="var(--accent)">Filled</app-button>
+            <app-button color="var(--accent)" styleIdle="outlined">Outlined</app-button>
+            <app-button color="var(--accent)" styleIdle="text" styleHover="ringed">Text → Ringed</app-button>
           </div>
         </div>
 
         <!-- Code -->
         <pre class="bg-primary text-secondary text-sm rounded-lg p-4 overflow-x-auto">
-&lt;app-button color="#2563eb"&gt;Filled&lt;/app-button&gt;
-&lt;app-button color="#2563eb" styleIdle="outlined"&gt;Outlined&lt;/app-button&gt;
-&lt;app-button color="#2563eb" styleIdle="text" styleHover="ringed"&gt;Text → Ringed&lt;/app-button&gt;
+&lt;app-button color="var(--accent)"&gt;Filled&lt;/app-button&gt;
+&lt;app-button color="var(--accent)" styleIdle="outlined"&gt;Outlined&lt;/app-button&gt;
+&lt;app-button color="var(--accent)" styleIdle="text" styleHover="ringed"&gt;Text → Ringed&lt;/app-button&gt;
         </pre>
       </section>
 
@@ -46,15 +46,15 @@ import { ButtonComponent } from '../../../../lib/components/ui-primitives/button
         <!-- Preview -->
         <div class="rounded-lg p-4 bg-white/50 mb-3">
           <div class="flex gap-2">
-            <app-button color="var(--color-support)" dense="sm">Small</app-button>
-            <app-button color="#ef4444" dense="lg" rounded="lg">Large</app-button>
+            <app-button color="var(--accent)" dense="sm">Small</app-button>
+            <app-button color="var(--accent)" dense="lg" rounded="lg">Large</app-button>
           </div>
         </div>
 
         <!-- Code -->
         <pre class="bg-primary text-secondary text-sm rounded-lg p-4 overflow-x-auto">
-&lt;app-button color="var(--color-support)" dense="sm"&gt;Small&lt;/app-button&gt;
-&lt;app-button color="#ef4444" dense="lg" rounded="lg"&gt;Large&lt;/app-button&gt;
+&lt;app-button color="var(--accent)" dense="sm"&gt;Small&lt;/app-button&gt;
+&lt;app-button color="var(--accent)" dense="lg" rounded="lg"&gt;Large&lt;/app-button&gt;
         </pre>
       </section>
 
@@ -68,13 +68,13 @@ import { ButtonComponent } from '../../../../lib/components/ui-primitives/button
         <!-- Preview -->
         <div class="rounded-lg p-4 bg-white/50 mb-3">
           <div class="flex gap-2">
-            <app-button color="#f59e0b" [disabled]="true">Disabled</app-button>
+            <app-button color="var(--accent)" [disabled]="true">Disabled</app-button>
           </div>
         </div>
 
         <!-- Code -->
         <pre class="bg-primary text-secondary text-sm rounded-lg p-4 overflow-x-auto">
-&lt;app-button color="#f59e0b" [disabled]="true"&gt;Disabled&lt;/app-button&gt;
+&lt;app-button color="var(--accent)" [disabled]="true"&gt;Disabled&lt;/app-button&gt;
         </pre>
       </section>
     </div>

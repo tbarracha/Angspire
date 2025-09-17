@@ -23,7 +23,8 @@
       "scrollbar-thumb": "#c4c4c4",
       "background-text": "#fafafa",
       "foreground-text": "#242325",
-      "tertiary": "#52545C"
+      "tertiary": "#52545C",
+      "placeholder": "#d4d4d8"
     }
   },
   {

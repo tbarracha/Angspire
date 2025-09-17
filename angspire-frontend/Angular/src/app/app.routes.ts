@@ -12,6 +12,7 @@ import { HomePageComponent } from './features/home/home-page.component';
 import { BrowseComponentsPage } from './features/browse-components/browse-components.page';
 import { ButtonDemoPage } from './features/browse-components/demos/ui-primitives/button-demo.page';
 import { SelectDemoPage } from './features/browse-components/demos/ui-primitives/select-demo.page';
+import { InputDemoPage } from './features/browse-components/demos/ui-primitives/input-demo.page';
 
 export const routes: Routes = [
   /** 1) Default for authenticated users -> Home page */
@@ -52,6 +53,7 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'button' },
       { path: 'button', component: ButtonDemoPage },
+      { path: 'input',  component: InputDemoPage },
       { path: 'select', component: SelectDemoPage },
     ],
   },

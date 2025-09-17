@@ -6,41 +6,50 @@ import { UiVariant, UiDensity, UiRadius } from './ui-shared';
   standalone: true,
 })
 export class UiPrimitiveDirective {
-  /** Accept any CSS color: hex, rgb(), hsl(), var(--token), etc. */
   @Input() color: string = 'var(--color-primary)';
-  /** Optional; if not set we auto-pick black/white by luminance. */
   @Input() contrastColor?: string;
 
-  /** Visual variant */
   @Input() variantIdle: UiVariant = 'filled';
   @Input() variantHover: UiVariant = 'filled';
 
-  /** State & ergonomics */
   @Input() disabled = false;
   @Input() underlineIdle = false;
   @Input() underlineHover = false;
   @Input() dense: UiDensity = 'md';
   @Input() rounded: UiRadius = 'full';
 
-  private hovering = signal(false);
+  /** NEW: placeholder color (inputs/textarea); Tailwind arbitrary value class uses this var */
+  @Input() placeholderColor: string | null = '#9ca3af'; // gray-400 default
 
-  /** ---- Styling helpers ---- */
+  private hovering = signal(false);
 
   @HostBinding('style.--ui-color') get uiColor() { return this.color; }
   @HostBinding('style.--ui-contrast') get uiContrast() {
     return this.contrastColor ?? this.autoContrast(this.color);
   }
+  /** NEW: bind CSS var used by Tailwind arbitrary value class */
+  @HostBinding('style.--ui-placeholder') get uiPlaceholder() {
+    return this.placeholderColor ?? null;
+  }
 
-  /** Always reserve border space to avoid layout shift */
+  /** Native/accessibility disabled */
+  @HostBinding('attr.disabled') get hostDisabledAttr() { return this.disabled ? '' : null; }
+  @HostBinding('attr.aria-disabled') get hostAriaDisabled() { return this.disabled ? 'true' : null; }
+
   @HostBinding('class') get hostClass() { return this.classes(); }
 
   private classes = computed(() => {
     const v = this.hovering() ? this.variantHover : this.variantIdle;
 
     const base = [
-      'transition font-semibold w-full focus:outline-none',
-      // Reserve space: always 1px border, default transparent
+      // layout/interaction
+      'transition w-full focus:outline-none',
+      // reserve border space
       'border border-[color:transparent]',
+      // focus ring for keyboard users
+      'focus-visible:ring-2 focus-visible:ring-[color:var(--ui-color)] focus-visible:ring-offset-2',
+      // NEW: placeholder color (works for inputs/textarea only; harmless elsewhere)
+      'placeholder-[color:var(--ui-placeholder)] placeholder:opacity-100',
       this.disabled ? 'cursor-not-allowed opacity-60 pointer-events-none' : 'cursor-pointer',
       this.sizeClass(this.dense),
       this.radiusClass(this.rounded),
@@ -49,27 +58,10 @@ export class UiPrimitiveDirective {
     ];
 
     const variant = {
-      filled: [
-        'bg-[color:var(--ui-color)]',
-        'text-[color:var(--ui-contrast)]',
-        // keep border transparent for stability
-      ],
-      outlined: [
-        'bg-transparent',
-        'text-[color:var(--ui-color)]',
-        'border-[color:var(--ui-color)]',
-      ],
-      text: [
-        'bg-transparent',
-        'text-[color:var(--ui-color)]',
-        // border stays transparent
-      ],
-      ringed: [
-        'bg-transparent',
-        'text-[color:var(--ui-color)]',
-        'ring-2 ring-[color:var(--ui-color)]',
-        'focus-visible:ring-4',
-      ],
+      filled:  ['bg-[color:var(--ui-color)]','text-[color:var(--ui-contrast)]'],
+      outlined:['bg-white','text-[color:var(--ui-color)]','border-[color:var(--ui-color)]'],
+      text:    ['bg-transparent','text-[color:var(--ui-color)]'],
+      ringed:  ['bg-white','text-[color:var(--ui-color)]','ring-2 ring-[color:var(--ui-color)]','focus-visible:ring-4'],
     }[v];
 
     return [...base, ...variant].filter(Boolean).join(' ');
@@ -95,9 +87,7 @@ export class UiPrimitiveDirective {
     return this.underlineIdle ? 'underline' : '';
   }
 
-  /** Simple luminance-based contrast (hex/rgb/hsl/var-safe best-effort) */
   private autoContrast(c: string): string {
-    // Best-effort: if it's a CSS var or unknown format, default to white.
     if (c.includes('var(')) return '#fff';
     try {
       const rgb = this.parseColorToRgb(c);
@@ -107,7 +97,6 @@ export class UiPrimitiveDirective {
   }
   private srgb(v: number) { v /= 255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }
   private parseColorToRgb(c: string) {
-    // hex #rgb/#rrggbb
     if (c.startsWith('#')) {
       const h = c.slice(1);
       const n = h.length === 3
@@ -115,10 +104,8 @@ export class UiPrimitiveDirective {
         : [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
       return { r: n[0], g: n[1], b: n[2] };
     }
-    // rgb(a)
-    const rgbm = c.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/i);
-    if (rgbm) return { r: +rgbm[1], g: +rgbm[2], b: +rgbm[3] };
-    // naive fallback
+    const m = c.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/i);
+    if (m) return { r: +m[1], g: +m[2], b: +m[3] };
     throw new Error('Unsupported color format');
   }
 }

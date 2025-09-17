@@ -1,6 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
-@import "prismjs/themes/prism.css";
 
 /* styles.css or component styles */
 
@@ -23,6 +22,8 @@
   --accent: #ef4444;
   --support: #fb923c;
   --neutral: #FCFCFC;
+
+  --placeholder: #d4d4d8;
 
   --success: #10b981;
   --success-contrast: #ecfdf5;
@@ -60,6 +61,8 @@
   --color-accent: var(--accent);
   --color-support: var(--support);
   --color-neutral: var(--neutral);
+
+  --color-placeholder: var(--placeholder);
 
   --color-success: var(--success);
   --color-success-contrast: var(--success-contrast);

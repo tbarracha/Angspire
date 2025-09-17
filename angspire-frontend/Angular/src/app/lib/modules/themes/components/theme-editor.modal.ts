@@ -18,7 +18,7 @@ import { MODAL_CLOSE } from '../../../components/ui/modal-components/modal.servi
       <div class="grid grid-cols-[1fr_auto] gap-4">
         <div class="flex flex-wrap gap-2 items-center">
           <div class="text-sm font-semibold">Themes:</div>
-          @for (t of themes(); track t.name) {
+          @for (t of themes(); track $index) {
             <button
               class="inline-flex items-center gap-2 px-3 py-1 rounded-full border hover:bg-gray-50 cursor-pointer"
               [class.bg-gray-900]="t.name === currentName()"
@@ -61,7 +61,7 @@ import { MODAL_CLOSE } from '../../../components/ui/modal-components/modal.servi
     <div class="flex-1 min-h-0 overflow-auto">
       @if (current(); as cur) {
         <div class="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))] mt-4">
-          @for (k of keys; track k) {
+          @for (k of keys(); track k) {
             <div class="rounded-xl p-3 flex flex-col gap-2">
               <!-- Top row: title -->
               <div class="text-sm font-medium truncate">{{ k }}</div>
@@ -106,26 +106,38 @@ export class ThemeEditorModalComponent implements OnInit, OnDestroy {
   private themeSvc = inject(ThemeService);
   private closeModal = inject(MODAL_CLOSE, { optional: true });
 
-  keys = THEME_KEYS;
+  keys = computed(() => {
+    const cur = this._current();
+    const fromCurrent = cur ? Object.keys(cur.colors ?? {}) : [];
+    // keep THEME_KEYS order first, then append new keys not listed
+    const set = new Set<string>(THEME_KEYS);
+    const extra = fromCurrent.filter(k => !set.has(k));
+    return [...THEME_KEYS, ...extra];
+  });
 
   private _current = signal<Theme | null>(this.themeSvc.getCurrentTheme());
-  private _themes  = signal<Theme[]>(this.themeSvc.getAllThemes());
+  private _themes = signal<Theme[]>(this.themeSvc.getAllThemes());
 
-  themes      = computed(() => this._themes());
-  current     = computed<Theme | null>(() => this._current());
+  themes = computed(() => this._themes());
+  current = computed<Theme | null>(() => this._current());
   currentName = computed(() => this.current()?.name ?? '');
 
-  private sub?: any;
+  private subs: any[] = [];
 
   ngOnInit(): void {
-    this.sub = (ThemeService as any).themeChanged?.subscribe?.((t: Theme) => {
+    const a = (ThemeService as any).themeChanged?.subscribe?.((t: Theme) => {
       this._current.set(t);
-      this._themes.set(this.themeSvc.getAllThemes());
     });
+    const b = (ThemeService as any).themesChanged?.subscribe?.((list: Theme[]) => {
+      this._themes.set(list);
+      // keep current pointer fresh (helps when renaming)
+      this._current.set(this.themeSvc.getCurrentTheme());
+    });
+    this.subs = [a, b].filter(Boolean);
   }
 
   ngOnDestroy(): void {
-    try { this.sub?.unsubscribe?.(); } catch {}
+    for (const s of this.subs) { try { s.unsubscribe?.(); } catch { } }
   }
 
   /* actions ------------------------------------------------------- */
@@ -134,19 +146,18 @@ export class ThemeEditorModalComponent implements OnInit, OnDestroy {
   rename(newName: string) {
     const cur = this.current();
     if (!cur) return;
-    const next: Theme = { ...cur, name: (newName ?? '').trim() || cur.name };
-    this.themeSvc.updateTheme(cur.name, next);
-    this._themes.set(this.themeSvc.getAllThemes());
-    this._current.set(this.themeSvc.getCurrentTheme());
+    const ok = this.themeSvc.renameTheme(cur.name, newName);
+    if (!ok) return; // optionally show a toast if duplicate/invalid
+    // signals get updated by events; no manual sets required
   }
 
   updateKey(key: string, value: string) {
     const cur = this.current();
     if (!cur) return;
     const next: Theme = { ...cur, colors: { ...cur.colors, [key]: value } };
-    this.themeSvc.updateTheme(cur.name, next);
-    document.documentElement.style.setProperty(`--${key}`, value);
-    this._current.set({ ...next });
+    this.themeSvc.updateTheme(cur.name, next); // service will re-emit + live-apply
+    // local echo (not strictly needed because events update signals)
+    this._current.set(this.themeSvc.getCurrentTheme());
   }
 
   onPick(key: string, sel: ColorSelection) { this.updateKey(key, sel.hex); }
@@ -155,7 +166,7 @@ export class ThemeEditorModalComponent implements OnInit, OnDestroy {
   toSelection(hex?: string | null): ColorSelection | null {
     if (!hex) return null;
     const norm = hex.toLowerCase();
-    const shades: Shade[] = [50,100,200,300,400,500,600,700,800,900,950];
+    const shades: Shade[] = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
     for (const fam of Object.keys(PALETTE) as ColorFamily[]) {
       const map = PALETTE[fam];
       for (const s of shades) {
@@ -170,7 +181,7 @@ export class ThemeEditorModalComponent implements OnInit, OnDestroy {
   add() {
     const name = this.uniqueName('New Theme');
     const baseColors = this.current()?.colors ?? {};
-    const colors = Object.fromEntries(this.keys.map(k => [k, baseColors[k] ?? '#000000']));
+    const colors = Object.fromEntries(this.keys().map(k => [k, baseColors[k] ?? '#000000']));
     this.themeSvc.addTheme({ name, colors });
     this.themeSvc.applyThemeByName(name);
     this._themes.set(this.themeSvc.getAllThemes());
@@ -195,7 +206,7 @@ export class ThemeEditorModalComponent implements OnInit, OnDestroy {
     this._current.set(this.themeSvc.getCurrentTheme());
   }
 
-  apply()       { const cur = this.current(); if (cur) this.themeSvc.applyThemeByName(cur.name); }
+  apply() { const cur = this.current(); if (cur) this.themeSvc.applyThemeByName(cur.name); }
   applySmooth() { const cur = this.current(); if (cur) this.themeSvc.applyThemeSmoothByName(cur.name, 220); }
 
   export() {
