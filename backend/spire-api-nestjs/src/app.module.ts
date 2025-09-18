@@ -1,15 +1,15 @@
 // src/app.module.ts
 import { Module } from '@nestjs/common';
-import { OpsKernelModule } from './core/operations/ops.kernel';
+import { OperationsModule } from './core/operations/operations.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-const AutoOps = OpsKernelModule.registerAutoProviders();
+const AutoOps = OperationsModule.registerAutoProviders();
 
 @Module({
   imports: [
     AutoOps,
-    OpsKernelModule,
+    OperationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

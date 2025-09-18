@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-// ops.kernel.ts
+// operations.module.ts
 import 'reflect-metadata';
 import {
-  All, Body, Controller, HttpStatus, Injectable, Logger, Module, OnModuleInit,
-  Post, Query, Req, Res, Type,
+  All, Body, Controller, HttpStatus, Injectable, Logger, Module, OnModuleInit, Post, Query, Req, Res, Type,
 } from '@nestjs/common';
-import { DiscoveryModule, DiscoveryService, Reflector, ModuleRef } from '@nestjs/core';
+import { DiscoveryModule, DiscoveryService, ModuleRef, Reflector } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import type { INestApplication } from '@nestjs/common';
 import type { Request, Response } from 'express';
@@ -14,111 +13,17 @@ import * as fs from 'node:fs';
 import * as crypto from 'node:crypto';
 import fg from 'fast-glob';
 
-// Swagger (kept inside for one-stop setup; you can split later if desired)
+import {
+  IOperation, IStreamOperation, OpMeta, OperationBaseCore,
+  HttpMethod, OperationContext,
+} from './operations.contracts';
+
+// Swagger helpers
 import { SwaggerModule, DocumentBuilder, OpenAPIObject, getSchemaPath, ApiExcludeController } from '@nestjs/swagger';
 
 // ==========================
-// Core contracts + metadata
+// Utility: pick op classes from a module
 // ==========================
-export type HttpMethod = 'GET'|'POST'|'PUT'|'DELETE';
-export type StreamFormat = 'ndjson'|'sse';
-
-export interface OperationContext {
-  userId?: string | null;
-  requestId?: string;
-}
-
-export abstract class OperationBaseCore<TRequest> {
-  protected userId?: string | null;
-  setUser(userId?: string | null) { this.userId = userId ?? null; }
-  setOperationContext(_ctx: OperationContext) {}
-
-  protected async onBefore(_req: TRequest): Promise<void> {}
-  protected async authorize(_req: TRequest): Promise<boolean> { return true; }
-  protected async validate(_req: TRequest): Promise<string[] | null> { return null; }
-  protected async onAfter(_req: TRequest): Promise<void> {}
-
-  async _onBefore(req: TRequest) { await this.onBefore(req); }
-  async _authorize(req: TRequest) { return this.authorize(req); }
-  async _validate(req: TRequest) { return this.validate(req); }
-  async _onAfter(req: TRequest) { await this.onAfter(req); }
-}
-
-export interface IOperation<TReq, TRes> {
-  execute(req: TReq, ctx: OperationContext): Promise<TRes>;
-}
-
-export interface IStreamOperation<TReq, TFrame> {
-  executeStream(req: TReq, ctx: OperationContext): AsyncIterable<TFrame>;
-}
-
-const META = {
-  GROUP: 'op:group',
-  ROUTE: 'op:route',
-  METHOD: 'op:method',
-  AUTH: 'op:auth',
-  THROTTLE: 'op:throttle',
-  STREAM: 'op:stream',
-  DTOS: 'op:dtos',
-};
-
-export function Operation(opts: {
-  group?: string; pinned?: boolean;
-  route?: string; method?: HttpMethod;
-  authorize?: string | boolean;
-  throttle?: 'ops-default'|'ops-strict'|'ops-stream';
-  stream?: StreamFormat;
-}) {
-  return (target: any) => {
-    if (opts.group) Reflect.defineMetadata(META.GROUP, { name: opts.group, pinned: !!opts.pinned }, target);
-    if (opts.route) Reflect.defineMetadata(META.ROUTE, opts.route, target);
-    if (opts.method) Reflect.defineMetadata(META.METHOD, opts.method, target);
-    if (opts.authorize !== undefined) Reflect.defineMetadata(META.AUTH, opts.authorize, target);
-    if (opts.throttle) Reflect.defineMetadata(META.THROTTLE, opts.throttle, target);
-    if (opts.stream) Reflect.defineMetadata(META.STREAM, opts.stream, target);
-  };
-}
-
-export function OperationGroup(name: string, pinned = false) {
-  return (target: any) => Reflect.defineMetadata(META.GROUP, { name, pinned }, target);
-}
-export function OperationRoute(route: string) {
-  return (target: any) => Reflect.defineMetadata(META.ROUTE, route, target);
-}
-export function OperationMethod(method: HttpMethod) {
-  return (target: any) => Reflect.defineMetadata(META.METHOD, method, target);
-}
-export function OperationAuthorize(policy?: string) {
-  return (target: any) => Reflect.defineMetadata(META.AUTH, policy ?? true, target);
-}
-export function OperationThrottle(policy: 'ops-default'|'ops-strict'|'ops-stream' = 'ops-default') {
-  return (target: any) => Reflect.defineMetadata(META.THROTTLE, policy, target);
-}
-export function OperationStream(format: StreamFormat = 'ndjson') {
-  return (target: any) => Reflect.defineMetadata(META.STREAM, format, target);
-}
-
-// Optional DTO mapping for Swagger
-export function OperationDto(opts: { request?: Type<any>; response?: Type<any> }) {
-  return (target: any) => Reflect.defineMetadata(META.DTOS, opts, target);
-}
-
-export const OpMeta = {
-  group: (t: any) => Reflect.getMetadata(META.GROUP, t) as {name:string;pinned:boolean} | undefined,
-  route: (t: any) => Reflect.getMetadata(META.ROUTE, t) as string | undefined,
-  method: (t: any) => Reflect.getMetadata(META.METHOD, t) as HttpMethod | undefined,
-  auth: (t: any) => Reflect.getMetadata(META.AUTH, t) as (string|boolean|undefined),
-  throttle: (t: any) => Reflect.getMetadata(META.THROTTLE, t) as string | undefined,
-  stream: (t: any) => Reflect.getMetadata(META.STREAM, t) as StreamFormat | undefined,
-  dtos: (t: any) => Reflect.getMetadata(META.DTOS, t) as {request?: Type<any>; response?: Type<any>} | undefined,
-};
-
-// ==========================
-// Auto-discovery utilities
-// ==========================
-function toPosix(p: string) { return p.replace(/\\/g, '/'); }
-function distRoot() { return path.resolve(__dirname, '..', '..'); }
-
 function pickOperationClasses(mod: any): any[] {
   const out: any[] = [];
   for (const key of Object.keys(mod)) {
@@ -130,6 +35,8 @@ function pickOperationClasses(mod: any): any[] {
   }
   return out;
 }
+function toPosix(p: string) { return p.replace(/\\/g, '/'); }
+function distRoot() { return path.resolve(__dirname, '..', '..'); }
 
 // ==========================
 // Registries
@@ -191,10 +98,9 @@ export class OperationRegistry {
 }
 
 // ==========================
-// Controller (single entry)
+// Controller (single entry) – excluded from Swagger
 // ==========================
 const OPS_BASE = '/ops';
-
 function wantsSse(req: Request) {
   return (req.headers['accept'] || '').toString().includes('text/event-stream');
 }
@@ -402,7 +308,7 @@ function scanOperationFiles(logger = new Logger('AutoOps')): Type<any>[] {
 }
 
 // ==========================
-// Module + Kernel (public API)
+// Module + Public API
 // ==========================
 @Module({
   imports: [
@@ -417,12 +323,12 @@ function scanOperationFiles(logger = new Logger('AutoOps')): Type<any>[] {
   providers: [OperationRegistry, StreamAbortRegistry, OperationMapper],
   exports: [OperationRegistry],
 })
-export class OpsKernelModule {
-  // dynamically extend providers list at runtime (once) – call from AppModule if you need
+export class OperationsModule {
+  /** Adds discovered operation classes as providers/exports. Use in AppModule. */
   static registerAutoProviders(): { module: Type<any>, providers: any[], exports: any[] } {
-    const logger = new Logger('OpsKernel.registerAutoProviders');
+    const logger = new Logger('OperationsModule.registerAutoProviders');
     const ops = scanOperationFiles(logger);
-    return { module: OpsKernelModule, providers: ops, exports: ops };
+    return { module: OperationsModule, providers: ops, exports: ops };
   }
 }
 
@@ -430,7 +336,7 @@ export class OpsKernelModule {
 // Swagger setup (single entry)
 // ==========================
 export type SwaggerSetupOpts = {
-  includeOperations?: boolean; // default false
+  includeOperations?: boolean;
   opsBase?: string;            // default '/ops'
   title?: string;
   description?: string;
@@ -439,7 +345,7 @@ export type SwaggerSetupOpts = {
 };
 
 function extendOpenApiWithOperations(
-  app: INestApplication,
+  _app: INestApplication,
   doc: OpenAPIObject,
   reg: OperationRegistry,
   opsBase: string,
@@ -448,7 +354,7 @@ function extendOpenApiWithOperations(
   doc.paths ||= {};
   doc.tags ||= [];
 
-  // ✅ Add the explicit cancel endpoint
+  // Explicit cancel endpoint (since controller is excluded)
   const cancelPath = `${opsBase}/streams/cancel`.replace(/\/{2,}/g, '/');
   if (!doc.paths[cancelPath]?.post) {
     doc.paths[cancelPath] = doc.paths[cancelPath] || {};
@@ -461,9 +367,7 @@ function extendOpenApiWithOperations(
           'application/json': {
             schema: {
               type: 'object',
-              properties: {
-                requestId: { type: 'string' },
-              },
+              properties: { requestId: { type: 'string' } },
               required: ['requestId'],
             },
           },
@@ -476,7 +380,7 @@ function extendOpenApiWithOperations(
     } as any;
   }
 
-  // ✅ Add each concrete operation
+  // Concrete operation endpoints
   let added = 0;
   for (const e of reg.all) {
     const pathKey = `${opsBase}${e.route}`.replace(/\/{2,}/g, '/');
@@ -500,8 +404,10 @@ function extendOpenApiWithOperations(
           content: { 'application/json': { schema: reqSchema } },
         },
         responses: {
-          '200': { description: e.isStream ? 'OK (stream)' : 'OK',
-            content: { 'application/json': { schema: resSchema } } },
+          '200': {
+            description: e.isStream ? 'OK (stream)' : 'OK',
+            content: { 'application/json': { schema: resSchema } },
+          },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '429': { description: 'Too Many Requests' },
@@ -516,12 +422,9 @@ function extendOpenApiWithOperations(
   logger.log(`OpenAPI: added ${added} operation entr${added === 1 ? 'y' : 'ies'}.`);
 }
 
-export class OpsKernel {
-  /** Import this in AppModule: `OpsKernelModule` AND optionally merge `OpsKernelModule.registerAutoProviders()` */
-  static autoProvidersModule() { return OpsKernelModule.registerAutoProviders(); }
-
-  /** Mount Swagger (one call from main.ts) */
-  static setupSwagger(app: INestApplication, opts: SwaggerSetupOpts = {}) {
+export class OperationsSwagger {
+  /** Mount Swagger (call once in main.ts) */
+  static setup(app: INestApplication, opts: SwaggerSetupOpts = {}) {
     const logger = new Logger('Swagger');
     const includeOperations = !!opts.includeOperations;
     const opsBase = opts.opsBase ?? '/ops';
@@ -533,7 +436,6 @@ export class OpsKernel {
       .addBearerAuth()
       .build();
 
-    // Collect extra models from registry for $ref usage
     const reg = app.get(OperationRegistry, { strict: false });
     const extraModels = includeOperations && reg ? reg.allDtos : [];
 
