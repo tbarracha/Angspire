@@ -15,7 +15,7 @@ import * as crypto from 'node:crypto';
 import fg from 'fast-glob';
 
 // Swagger (kept inside for one-stop setup; you can split later if desired)
-import { SwaggerModule, DocumentBuilder, OpenAPIObject, getSchemaPath } from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder, OpenAPIObject, getSchemaPath, ApiExcludeController } from '@nestjs/swagger';
 
 // ==========================
 // Core contracts + metadata
@@ -199,6 +199,7 @@ function wantsSse(req: Request) {
   return (req.headers['accept'] || '').toString().includes('text/event-stream');
 }
 
+@ApiExcludeController()
 @Controller('ops')
 export class OperationsController {
   constructor(
@@ -447,11 +448,40 @@ function extendOpenApiWithOperations(
   doc.paths ||= {};
   doc.tags ||= [];
 
+  // ✅ Add the explicit cancel endpoint
+  const cancelPath = `${opsBase}/streams/cancel`.replace(/\/{2,}/g, '/');
+  if (!doc.paths[cancelPath]?.post) {
+    doc.paths[cancelPath] = doc.paths[cancelPath] || {};
+    doc.paths[cancelPath].post = {
+      tags: ['Operations'],
+      summary: 'Cancel stream (by requestId)',
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                requestId: { type: 'string' },
+              },
+              required: ['requestId'],
+            },
+          },
+        },
+      },
+      responses: {
+        '202': { description: 'Cancellation requested' },
+        '400': { description: 'Bad Request' },
+      },
+    } as any;
+  }
+
+  // ✅ Add each concrete operation
   let added = 0;
   for (const e of reg.all) {
     const pathKey = `${opsBase}${e.route}`.replace(/\/{2,}/g, '/');
     const method = String(e.method || 'POST').toLowerCase() as 'get'|'post'|'put'|'delete';
-    const group = OpMeta.group(e.ctor)?.name ?? 'operations';
+    const group = OpMeta.group(e.ctor)?.name ?? 'Operations';
 
     if (!doc.tags.find(t => t.name === group)) doc.tags.push({ name: group });
 
@@ -470,10 +500,8 @@ function extendOpenApiWithOperations(
           content: { 'application/json': { schema: reqSchema } },
         },
         responses: {
-          '200': {
-            description: e.isStream ? 'OK (stream)' : 'OK',
-            content: { 'application/json': { schema: resSchema } },
-          },
+          '200': { description: e.isStream ? 'OK (stream)' : 'OK',
+            content: { 'application/json': { schema: resSchema } } },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '429': { description: 'Too Many Requests' },
@@ -484,6 +512,7 @@ function extendOpenApiWithOperations(
       logger.warn(`OpenAPI duplicate ${method.toUpperCase()} ${pathKey} skipped.`);
     }
   }
+
   logger.log(`OpenAPI: added ${added} operation entr${added === 1 ? 'y' : 'ies'}.`);
 }
 
