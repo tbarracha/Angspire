@@ -4,8 +4,8 @@ import { HttpMethod, OpMeta } from './operation.contracts';
 export interface HttpRegistration {
   route: string;
   method: HttpMethod;
-  policy: string; // throttling policy
-  auth?: string|boolean;
+  policy: string;
+  auth?: string | boolean;
   ctor: Type<any>;
   isStream?: boolean;
 }
@@ -36,15 +36,16 @@ export class OperationRegistry {
   registerHttp(ctor: Type<any>, fallbackGroup: string) {
     const group = OpMeta.group(ctor)?.name ?? fallbackGroup;
     const name = ctor.name.replace(/Operation$/, '').toLowerCase();
-    const route = OpMeta.route(ctor) ?? `${group.toLowerCase()}/${name}`;
+    // ✅ no '/api'
+    const route = `/${OpMeta.route(ctor) ?? `${group.toLowerCase()}/${name}`}`.replace(/\/+/g, '/');
     const method = OpMeta.method(ctor) ?? 'POST';
     const policy = OpMeta.throttle(ctor) ?? 'ops-default';
     const auth = OpMeta.auth(ctor);
     const isStream = !!OpMeta.stream(ctor);
 
-    this.http.push({
-      route: `/api/${route}`,
-      method, policy, auth, ctor, isStream,
-    });
+    const key = `${method} ${route}`.toLowerCase();
+    if (this.http.some(e => `${e.method} ${e.route}`.toLowerCase() === key)) return;
+
+    this.http.push({ route, method, policy, auth, ctor, isStream });
   }
 }
