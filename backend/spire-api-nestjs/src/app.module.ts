@@ -1,18 +1,14 @@
-// src/app.module.ts
+// app.module.ts
 import { Module } from '@nestjs/common';
-import { AppConfigModule } from './core/config/config.module';
-import { DbModule } from './core/db/db.module';
-import { OperationsModule } from './core/operations/operations.module';
+import { OpsKernelModule } from './core/operations/ops.kernel';
 
-const OPS_ENABLED = true;
+// If you want to auto-load providers discovered in dist:
+const AutoOps = OpsKernelModule.registerAutoProviders();
 
 @Module({
   imports: [
-    AppConfigModule,
-    DbModule,
-    ...(OPS_ENABLED ? [OperationsModule] : []),
+    AutoOps,          // registers discovered operation classes as providers
+    OpsKernelModule,  // registry + controller + throttling + mapper
   ],
 })
 export class AppModule {}
-
-export { OPS_ENABLED };

@@ -1,30 +1,16 @@
-// src/modules/hello/operations/hello-operation.ts
 import { Injectable } from '@nestjs/common';
-import {
-  Operation,
-  IOperation,
-  OperationContext,
-} from 'src/core/operations/operation.contracts';
+import { Operation, OperationDto, OperationGroup, OperationMethod, OperationRoute } from 'src/core/operations/ops.kernel';
 
-export class HelloInputDto {
-  firstName!: string;
-  lastName?: string;
-}
+export class HelloInputDto { firstName!: string; lastName?: string; }
+export class HelloOutputDto { message!: string; }
 
-export class HelloOutputDto {
-  message!: string;
-}
-
-@Operation({
-  group: 'hello',
-  route: 'hello/say',
-  method: 'POST',
-})
+@Operation({ group: 'Hello' })
+@OperationGroup('hello', true)
+@OperationRoute('hello/say')
+@OperationMethod('POST')
 @Injectable()
-export class SayHelloOperation
-  implements IOperation<HelloInputDto, HelloOutputDto>
-{
-  async execute(input: HelloInputDto, _ctx: OperationContext): Promise<HelloOutputDto> {
+export class SayHelloOperation {
+  async execute(input: HelloInputDto): Promise<HelloOutputDto> {
     const name = input.lastName ? `${input.firstName} ${input.lastName}` : input.firstName;
     return { message: `Hello ${name}!` };
   }
