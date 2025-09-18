@@ -1,0 +1,183 @@
+/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+/* styles.css or component styles */
+
+/* Placeholder, caret, selection use CSS variables from the directive */
+[uiPrimitive]::placeholder { color: var(--ui-placeholder, inherit); opacity: 1; }
+[uiPrimitive] { caret-color: var(--ui-caret, auto); }
+[uiPrimitive]::selection { background: var(--ui-selection-bg, #b3d4fc); color: var(--ui-selection-text, #000); }
+
+/* Also cover inputs/textareas where placeholder pseudo differs across engines */
+input[uiPrimitive]::placeholder,
+textarea[uiPrimitive]::placeholder { color: var(--ui-placeholder, inherit); }
+
+/* Optional: default transitions for newly themed nodes */
+[uiPrimitive] { transition-property: color, background-color, border-color, outline-color, box-shadow; transition-duration: 150ms; transition-timing-function: ease; }
+
+
+:root {
+  /* npm run theme update */
+  /* Theme START */
+  --dark: #18181B;
+  --light: #FAFAFA;
+
+  --background: #18181B;
+  --background-text: #fafafa;
+
+  --foreground: #fafafa;
+  --foreground-text: #242325;
+
+  --primary: #d4d4d8;
+  --secondary: #a1a1aa;
+  --tertiary: #52545C;
+
+  --accent: #ef4444;
+  --support: #fb923c;
+  --neutral: #FCFCFC;
+
+  --placeholder: #d4d4d8;
+
+  --success: #10b981;
+  --success-contrast: #ecfdf5;
+
+  --warning: #F8D863;
+  --warning-contrast: #CB7A10;
+
+  --error: #ef4444;
+  --error-contrast: #fff;
+  
+  --info: #2563eb;
+  --info-contrast: #fff;
+
+  --scrollbar-track: #f4f4f5;
+  --scrollbar-thumb: #c4c4c4;
+  /* Theme END */
+}
+
+@theme {
+  /* Theme START */
+
+  --color-dark: var(--dark);
+  --color-light: var(--light);
+
+  --color-background: var(--background);
+  --color-background-text: var(--background-text);
+
+  --color-foreground: var(--foreground);
+  --color-foreground-text: var(--foreground-text);
+
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-tertiary: var(--tertiary);
+
+  --color-accent: var(--accent);
+  --color-support: var(--support);
+  --color-neutral: var(--neutral);
+
+  --color-placeholder: var(--placeholder);
+
+  --color-success: var(--success);
+  --color-success-contrast: var(--success-contrast);
+
+  --color-warning: var(--warning);
+  --color-warning-contrast: var(--warning-contrast);
+
+  --color-error: var(--error);
+  --color-error-contrast: var(--error-contrast);
+
+  --color-info: var(--info);
+  --color-info-contrast: var(--info-contrast);
+
+  --color-scrollbar-track: var(--scrollbar-track);
+  --color-scrollbar-thumb: var(--scrollbar-thumb);
+/* Theme END */
+}
+
+/* Enable scrollbar styling */
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-secondary) transparent !important;
+}
+
+.scrollbar-gutter {
+  scrollbar-gutter: stable;
+}
+
+/* For Chrome, Edge, Safari */
+.scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+.scrollbar-gutter::-webkit-scrollbar {
+  scrollbar-gutter: stable;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--color-scrollbar-thumb);
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-scrollbar-thumb-hover);
+}
+.scrollbar::-webkit-scrollbar-track {
+  background: var(--color-scrollbar-track);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.scrollbar::-webkit-scrollbar-track:hover {
+  background: var(--color-scrollbar-track-hover);
+}
+.scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Thumb color variants */
+.scrollbar-thumb-primary::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary) !important;
+}
+.scrollbar-thumb-primary::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-secondary) !important;
+}
+.scrollbar-thumb-accent::-webkit-scrollbar-thumb {
+  background-color: var(--color-accent) !important;
+}
+.scrollbar-thumb-accent::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-accent-dark) !important;
+}
+.scrollbar-thumb-dark::-webkit-scrollbar-thumb {
+  background-color: var(--color-dark) !important;
+}
+.scrollbar-thumb-dark::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-tertiary) !important;
+}
+
+/* Track color variants */
+.scrollbar-track-light::-webkit-scrollbar-track {
+  background: var(--color-light) !important;
+}
+.scrollbar-track-light::-webkit-scrollbar-track:hover {
+  background: var(--color-primary) !important;
+}
+.scrollbar-track-dark::-webkit-scrollbar-track {
+  background: var(--color-dark) !important;
+}
+.scrollbar-track-dark::-webkit-scrollbar-track:hover {
+  background: var(--color-tertiary) !important;
+}
+
+/* Transparent track utility */
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.scrollbar-track-transparent::-webkit-scrollbar-track:hover {
+  background: transparent !important;
+}
+
+button:not(:disabled), 
+[type="button"]:not(:disabled), 
+[type="submit"]:not(:disabled), 
+[type="reset"]:not(:disabled) {
+  cursor: pointer !important;
+}
