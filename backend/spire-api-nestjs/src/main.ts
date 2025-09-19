@@ -1,7 +1,7 @@
 // main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { OperationsBootstrap, OperationsSwagger } from './core/operations/operations.module';
+import { OperationsBootstrap, OperationsSwagger } from './spire-core/operations/operations.module';
 import { RequestMethod } from '@nestjs/common';
 
 async function bootstrap() {

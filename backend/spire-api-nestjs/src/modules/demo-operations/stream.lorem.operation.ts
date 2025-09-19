@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   Operation, OperationDto, OperationGroup, OperationMethod, OperationRoute, OperationStream, OperationThrottle,
-} from 'src/core/operations/operations.contracts';
+} from 'src/spire-core/operations/operations.contracts';
 
 export class LoremInputDto {
   @ApiProperty({ description: 'How many chunks to emit', example: 5, minimum: 1 })

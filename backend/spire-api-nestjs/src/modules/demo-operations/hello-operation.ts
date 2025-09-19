@@ -1,7 +1,7 @@
 // src/modules/demo-operations/hello.operation.ts
 import { Injectable } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Operation, OperationDto, OperationGroup, OperationMethod, OperationRoute } from 'src/core/operations/operations.contracts';
+import { Operation, OperationDto, OperationGroup, OperationMethod, OperationRoute } from 'src/spire-core/operations/operations.contracts';
 
 export class HelloInputDto {
   @ApiProperty({example: "Creative"})

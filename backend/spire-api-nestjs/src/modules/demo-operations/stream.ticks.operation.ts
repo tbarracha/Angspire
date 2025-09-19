@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   Operation, OperationDto, OperationGroup, OperationMethod, OperationRoute, OperationStream, OperationThrottle,
-} from 'src/core/operations/operations.contracts';
+} from 'src/spire-core/operations/operations.contracts';
 
 export class TicksInputDto {
   @ApiProperty({ description: 'Milliseconds between frames', example: 250, minimum: 50, maximum: 5_000 })
