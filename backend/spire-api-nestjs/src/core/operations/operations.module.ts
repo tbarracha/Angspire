@@ -151,11 +151,11 @@ export class OperationRegistry {
 // ==========================
 // Controller (hidden from Swagger)
 // ==========================
-const OPS_BASE = '/ops';
+const OPS_BASE = '/api';
 function wantsSse(req: Request) { return (req.headers['accept'] || '').toString().includes('text/event-stream'); }
 
 @ApiExcludeController()
-@Controller('ops')
+@Controller()
 export class OperationsController {
   constructor(
     private readonly reg: OperationRegistry,
@@ -468,7 +468,7 @@ export class OperationsSwagger {
   static setup(app: INestApplication, opts: SwaggerSetupOpts = {}) {
     const logger = new Logger('Swagger');
     const includeOperations = !!opts.includeOperations;
-    const opsBase = opts.opsBase ?? '/ops';
+    const opsBase = opts.opsBase ?? '/api';
 
     const config = new DocumentBuilder()
       .setTitle(opts.title ?? 'Spire API (NestJS)')
