@@ -19,6 +19,19 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "plugins": [
+      {
+        "name": "@nestjs/swagger/plugin",
+        "options": {
+          // ✔️ Generate schemas without @ApiProperty
+          "classValidatorShim": true,
+          // ✔️ Read JSDoc on classes/properties for description/example
+          "introspectComments": true,
+          // (Optional) auto-detect DTO files by suffix
+          "dtoFileNameSuffix": [".dto.ts", ".entity.ts", ".operation.ts"]
+        }
+      }
+    ]
   }
 }

@@ -21,7 +21,6 @@ export class HelloOutputDto {
 @OperationRoute('hello/say')
 @OperationMethod('POST')
 
-// ✅ Make DTO mapping explicit (robust even if inference fails)
 @OperationDto({ request: HelloInputDto, response: HelloOutputDto })
 @Injectable()
 export class SayHelloOperation {
