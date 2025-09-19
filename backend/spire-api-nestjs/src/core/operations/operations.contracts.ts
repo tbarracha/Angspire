@@ -1,10 +1,13 @@
-// operations.contracts.ts
+// src/core/operations/operations.contracts.ts
 import 'reflect-metadata';
 import type { Type } from '@nestjs/common';
 
 // ---------- Types ----------
 export type HttpMethod = 'GET'|'POST'|'PUT'|'DELETE';
 export type StreamFormat = 'ndjson'|'sse';
+
+// Per-operation auth policy
+export type OperationAuthPolicy = 'user' | 'service' | 'either' | boolean | undefined;
 
 export interface OperationContext {
   userId?: string | null;
@@ -52,7 +55,7 @@ const META = {
 export function Operation(opts: {
   group?: string; pinned?: boolean;
   route?: string; method?: HttpMethod;
-  authorize?: string | boolean;
+  authorize?: OperationAuthPolicy;
   throttle?: 'ops-default'|'ops-strict'|'ops-stream';
   stream?: StreamFormat;
 }) {
@@ -75,7 +78,7 @@ export const OperationRoute = (route: string) =>
 export const OperationMethod = (method: HttpMethod) =>
   (target: any) => Reflect.defineMetadata(META.METHOD, method, target);
 
-export const OperationAuthorize = (policy?: string) =>
+export const OperationAuthorize = (policy?: OperationAuthPolicy) =>
   (target: any) => Reflect.defineMetadata(META.AUTH, policy ?? true, target);
 
 export const OperationThrottle = (policy: 'ops-default'|'ops-strict'|'ops-stream' = 'ops-default') =>
@@ -94,7 +97,7 @@ export const OpMeta = {
   group: (t: any) => Reflect.getMetadata(META.GROUP, t) as {name:string;pinned:boolean} | undefined,
   route: (t: any) => Reflect.getMetadata(META.ROUTE, t) as string | undefined,
   method: (t: any) => Reflect.getMetadata(META.METHOD, t) as HttpMethod | undefined,
-  auth: (t: any) => Reflect.getMetadata(META.AUTH, t) as (string|boolean|undefined),
+  auth: (t: any) => Reflect.getMetadata(META.AUTH, t) as OperationAuthPolicy,
   throttle: (t: any) => Reflect.getMetadata(META.THROTTLE, t) as string | undefined,
   stream: (t: any) => Reflect.getMetadata(META.STREAM, t) as StreamFormat | undefined,
   dtos: (t: any) => Reflect.getMetadata(META.DTOS, t) as {request?: Type<any>; response?: Type<any>} | undefined,

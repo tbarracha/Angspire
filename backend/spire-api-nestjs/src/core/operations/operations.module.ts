@@ -12,17 +12,15 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import * as crypto from 'node:crypto';
 import fg from 'fast-glob';
+import { verify, VerifyOptions, JwtPayload } from 'jsonwebtoken';
 
 import {
   IOperation, IStreamOperation, OpMeta, OperationBaseCore,
-  HttpMethod, OperationContext,
+  HttpMethod, OperationContext, OperationAuthPolicy,
 } from './operations.contracts';
 
 import { SwaggerModule, DocumentBuilder, OpenAPIObject, getSchemaPath, ApiExcludeController } from '@nestjs/swagger';
 import { OperationsGateway } from './operations.ws.gateway';
-
-// ⬇️ NEW: import DI providers + helper from ops.di.ts
-import { OperationRegistry, StreamAbortRegistry, inferDtos } from './operations.di';
 
 // ==========================
 // Utils
@@ -40,6 +38,156 @@ function pickOperationClasses(mod: any): any[] {
 }
 function toPosix(p: string) { return p.replace(/\\/g, '/'); }
 function distRoot() { return path.resolve(__dirname, '..', '..'); }
+const isCtor = (v: any) => typeof v === 'function' && v.prototype && v.name;
+
+// Heuristics to avoid primitive/builtin types being treated as DTOs
+const NON_DTO_NAMES = new Set(['Object', 'Array', 'Promise', 'String', 'Number', 'Boolean', 'Map', 'Set', 'Date']);
+
+// ============ In-file DI: Registry + Abort =============
+export interface HttpRegistration {
+  route: string;
+  method: HttpMethod;
+  policy: string;
+  auth?: string | boolean;
+  ctor: Type<any>;
+  isStream?: boolean;
+}
+
+type InferredDtos = { request?: Type<any>; response?: Type<any> };
+
+export function inferDtos(ctor: Type<any>): InferredDtos {
+  const explicit = OpMeta.dtos(ctor);
+  const out: InferredDtos = { ...explicit };
+
+  const statics = {
+    request:
+      (ctor as any).RequestDto ||
+      (ctor as any).InputDto ||
+      (ctor as any).Request ||
+      (ctor as any).ReqDto,
+    response:
+      (ctor as any).ResponseDto ||
+      (ctor as any).OutputDto ||
+      (ctor as any).Response ||
+      (ctor as any).ResDto ||
+      (ctor as any).ResultDto,
+  };
+
+  if (!out.request && isCtor(statics.request) && !NON_DTO_NAMES.has(statics.request.name)) {
+    out.request = statics.request;
+  }
+  if (!out.response && isCtor(statics.response) && !NON_DTO_NAMES.has(statics.response.name)) {
+    out.response = statics.response;
+  }
+
+  // BEST-EFFORT: infer request via design:paramtypes
+  if (!out.request) {
+    try {
+      const proto = ctor.prototype;
+      const key = (proto.execute instanceof Function) ? 'execute'
+        : (proto.executeStream instanceof Function) ? 'executeStream'
+          : undefined;
+      if (key) {
+        const paramTypes: any[] = Reflect.getMetadata('design:paramtypes', proto, key) || [];
+        const candidate = paramTypes[0];
+        if (isCtor(candidate) && !NON_DTO_NAMES.has(candidate.name)) {
+          out.request = candidate;
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  return out;
+}
+
+@Injectable()
+export class StreamAbortRegistry {
+  private map = new Map<string, AbortController>();
+  tryRegister(key: string, c: AbortController) {
+    if (this.map.has(key)) return false;
+    this.map.set(key, c);
+    return true;
+  }
+  cancel(key: string) {
+    const c = this.map.get(key);
+    if (!c) return false;
+    c.abort();
+    this.map.delete(key);
+    return true;
+  }
+  remove(key: string) { this.map.delete(key); }
+}
+
+@Injectable()
+export class OperationRegistry {
+  private http: HttpRegistration[] = [];
+  private dtoSet = new Set<Type<any>>();
+
+  get all() { return this.http.slice(); }
+  get allDtos() { return Array.from(this.dtoSet); }
+
+  registerHttp(ctor: Type<any>, fallbackGroup: string) {
+    const group = OpMeta.group(ctor)?.name ?? fallbackGroup;
+    const name = ctor.name.replace(/Operation$/, '').toLowerCase();
+    const route = `/${OpMeta.route(ctor) ?? `${group.toLowerCase()}/${name}`}`.replace(/\/+/g, '/');
+    const method = OpMeta.method(ctor) ?? 'POST';
+    const policy = OpMeta.throttle(ctor) ?? 'ops-default';
+    const auth = OpMeta.auth(ctor);
+    const isStream = !!OpMeta.stream(ctor);
+
+    const key = `${method} ${route}`.toLowerCase();
+    if (this.http.some(e => `${e.method} ${e.route}`.toLowerCase() === key)) return;
+
+    const dtos = inferDtos(ctor);
+    if (dtos.request) this.dtoSet.add(dtos.request);
+    if (dtos.response) this.dtoSet.add(dtos.response);
+
+    this.http.push({ route, method, policy, auth: auth as any, ctor, isStream });
+  }
+}
+
+// ==========================
+// Minimal per-operation auth (HTTP)
+// ==========================
+function verifyTokenAndExtract(
+  token: string | undefined,
+  wants: OperationAuthPolicy,
+): { userId: string | null } | null {
+  if (wants === false || wants === undefined) return { userId: null };
+
+  const key = process.env.JWT_KEY || '';
+  const issuer = process.env.JWT_ISSUER || '';
+  const audience = process.env.JWT_AUDIENCE || '';
+  if (!key || !issuer || !audience) {
+    return wants ? null : { userId: null };
+  }
+
+  const cleaned = (token || '').trim().replace(/^Bearer\s+/i, '').replace(/^"|"$/g, '');
+  const opts: VerifyOptions = {
+    algorithms: ['HS256'],
+    audience,
+    issuer,
+    clockTolerance: 120,
+  };
+
+  try {
+    const decoded = verify(cleaned, key, opts) as JwtPayload;
+    if (!decoded?.sub) return null;
+
+    const isService = !!decoded['client_id'];
+    const wantUser = wants === true || wants === 'user';
+    const wantSvc = wants === 'service';
+    const either = wants === 'either';
+
+    if (wantUser && isService) return null;
+    if (wantSvc && !isService) return null;
+    if (either || wantUser || wantSvc) return { userId: String(decoded.sub) };
+
+    return { userId: String(decoded.sub) };
+  } catch {
+    return null;
+  }
+}
 
 // ==========================
 // Controller (hidden from Swagger)
@@ -82,6 +230,12 @@ export class OperationsController {
 
     if (!entry) { res.status(HttpStatus.NOT_FOUND).json({ message: `No operation for ${method} ${full}` }); return; }
 
+    // Per-operation auth
+    const policy = OpMeta.auth(entry.ctor);
+    const authzHeader = req.header('authorization') || '';
+    const auth = verifyTokenAndExtract(authzHeader, policy);
+    if (auth === null) { res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Unauthorized' }); return; }
+
     let op: any = this.moduleRef.get(entry.ctor, { strict: false });
     if (!op) op = await this.moduleRef.create(entry.ctor as any);
     if (!op) { res.status(HttpStatus.NOT_FOUND).json({ message: `Operation provider not found for ${entry.ctor.name}` }); return; }
@@ -90,7 +244,7 @@ export class OperationsController {
     const requestId = (req.header('X-Client-Request-Id') || '').trim() || crypto.randomUUID();
     res.setHeader('X-Request-Id', requestId);
 
-    const ctx: OperationContext = { userId: (req as any).user?.sub ?? null, requestId };
+    const ctx: OperationContext = { userId: auth.userId ?? null, requestId };
 
     try {
       if (op instanceof OperationBaseCore) {
@@ -259,10 +413,12 @@ function scanOperationFiles(logger = new Logger('AutoOps')): Type<any>[] {
   ],
   controllers: [OperationsController],
   providers: [
-    OperationRegistry,         // ← from ops.di.ts
-    StreamAbortRegistry,       // ← from ops.di.ts
+    OperationRegistry,
+    { provide: 'OperationRegistry', useExisting: OperationRegistry }, // token alias for gateway
+    StreamAbortRegistry,
+    { provide: 'StreamAbortRegistry', useExisting: StreamAbortRegistry }, // token alias for gateway
     OperationMapper,
-    OperationsGateway,         // ← WebSocket gateway
+    OperationsGateway,
   ],
   exports: [OperationRegistry, OperationMapper],
 })
@@ -275,7 +431,7 @@ export class OperationsModule {
 }
 
 // ==========================
-// Swagger setup (single entry) — unchanged logic except imports now use inferDtos from ops.di.ts
+// Swagger setup
 // ==========================
 export type SwaggerSetupOpts = {
   includeOperations?: boolean;

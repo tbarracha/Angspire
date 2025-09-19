@@ -1,16 +1,19 @@
 // src/core/operations/operations.ws.gateway.ts
-import { Logger, Injectable } from '@nestjs/common';
+import { Logger, Injectable, Inject } from '@nestjs/common';
 import {
   WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket,
   OnGatewayConnection, OnGatewayDisconnect, WsException,
 } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
 import { ModuleRef } from '@nestjs/core';
+import { verify, VerifyOptions, JwtPayload } from 'jsonwebtoken';
 
-import { OperationRegistry, StreamAbortRegistry } from './operations.di';
-import { IStreamOperation, OperationBaseCore, OperationContext } from './operations.contracts';
+import { IStreamOperation, OperationBaseCore, OperationContext, OpMeta, OperationAuthPolicy } from './operations.contracts';
 
-export type WsClientAuth = { userId?: string | null };
+// NOTE: we inject by string tokens to avoid importing the module file and creating a circular dependency
+type OperationRegistryLike = { all: Array<{ route: string; method: string; ctor: any; isStream?: boolean; }> };
+type StreamAbortRegistryLike = { tryRegister(key: string, c: AbortController): boolean; remove(key: string): void; };
+
 export type WsStartPayload = { route: string; method?: 'POST'|'GET'|'PUT'|'DELETE'; requestId?: string; input?: any; };
 export type WsCancelPayload = { requestId: string };
 export type WsFrame<T = any> = { requestId: string; type: 'frame' | 'end' | 'error'; data?: T; error?: string };
@@ -30,14 +33,9 @@ export class OperationsGateway implements OnGatewayConnection, OnGatewayDisconne
 
   constructor(
     private readonly moduleRef: ModuleRef,
-    private readonly reg: OperationRegistry,
-    private readonly aborts: StreamAbortRegistry,
+    @Inject('OperationRegistry') private readonly reg: OperationRegistryLike,
+    @Inject('StreamAbortRegistry') private readonly aborts: StreamAbortRegistryLike,
   ) {}
-
-  private getAuth(socket: Socket): WsClientAuth {
-    // TODO: verify JWT
-    return { userId: null };
-  }
 
   private startHeartbeat(socket: Socket) {
     this.stopHeartbeat(socket);
@@ -76,9 +74,46 @@ export class OperationsGateway implements OnGatewayConnection, OnGatewayDisconne
     socket.emit('ops.echo', payload);
   }
 
+  private resolveWsAuth(socket: Socket, policy: OperationAuthPolicy): { userId: string | null } | null {
+    if (policy === false || policy === undefined) return { userId: null };
+
+    const key = process.env.JWT_KEY || '';
+    const issuer = process.env.JWT_ISSUER || '';
+    const audience = process.env.JWT_AUDIENCE || '';
+    if (!key || !issuer || !audience) return policy ? null : { userId: null };
+
+    const header = (socket.handshake.headers['authorization'] as string | undefined);
+    const token = (header ?? (socket.handshake.auth?.token as string | undefined) ?? (socket.handshake.query?.token as string | undefined) ?? '').toString();
+    const cleaned = token.trim().replace(/^Bearer\s+/i, '').replace(/^"|"$/g, '');
+
+    const opts: VerifyOptions = {
+      algorithms: ['HS256'],
+      audience,
+      issuer,
+      clockTolerance: 120,
+    };
+
+    try {
+      const decoded = verify(cleaned, key, opts) as JwtPayload;
+      if (!decoded?.sub) return null;
+
+      const isService = !!decoded['client_id'];
+      const wantUser = policy === true || policy === 'user';
+      const wantSvc = policy === 'service';
+      const either = policy === 'either';
+
+      if (wantUser && isService) return null;
+      if (wantSvc && !isService) return null;
+      if (either || wantUser || wantSvc) return { userId: String(decoded.sub) };
+
+      return { userId: String(decoded.sub) };
+    } catch {
+      return null;
+    }
+  }
+
   @SubscribeMessage('ops.stream.start')
   async start(@ConnectedSocket() socket: Socket, @MessageBody() body: WsStartPayload) {
-    const auth = this.getAuth(socket);
     const requestId = body.requestId || `ws_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const method = (body.method || 'POST').toUpperCase();
     const opPath = body.route?.startsWith('/') ? body.route : `/${body.route || ''}`;
@@ -89,6 +124,14 @@ export class OperationsGateway implements OnGatewayConnection, OnGatewayDisconne
 
     if (!entry) {
       socket.emit('ops.stream.frame', <WsFrame>{ requestId, type: 'error', error: `No operation for ${method} ${opPath}` });
+      return;
+    }
+
+    // Per-operation auth on WS
+    const policy = OpMeta.auth(entry.ctor);
+    const auth = this.resolveWsAuth(socket, policy);
+    if (auth === null) {
+      socket.emit('ops.stream.frame', <WsFrame>{ requestId, type: 'error', error: 'Unauthorized' });
       return;
     }
 
