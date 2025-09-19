@@ -26,21 +26,11 @@ export class JwtIdentityService {
     }
   }
 
-  generateJwt(
-    identity: IJwtIdentity,
-    extraClaims?: Claims,
-    expiresInMinutes?: number,
-  ): string {
+  generateJwt(identity: IJwtIdentity, extraClaims?: Claims, expiresInMinutes?: number): string {
     const iatSec = Math.floor(Date.now() / 1000);
     const expSec = iatSec + 60 * (expiresInMinutes ?? this.defaultMinutes);
 
-    const base: Claims = {
-      sub: identity.id,
-      iss: this.issuer,
-      aud: this.audience,
-      iat: iatSec,
-      exp: expSec,
-    };
+    const base: Claims = { sub: identity.id, iss: this.issuer, aud: this.audience, iat: iatSec, exp: expSec };
 
     if (!identity.isService) {
       const u = identity as IJwtUserIdentity;
@@ -84,7 +74,6 @@ export class JwtIdentityService {
 
     const issuer = (payload.iss as string) ?? '';
     const id = String(payload.sub);
-
     const imageUrl = (payload['image_url'] as string | undefined) ?? null;
     const clientId = (payload['client_id'] as string | undefined) ?? '';
 
@@ -156,7 +145,6 @@ export class JwtIdentityService {
   private decode(token: string): JwtPayload | null {
     const cleaned = token.trim().replace(/^Bearer\s+/i, '').replace(/^"|"$/g, '');
     try {
-      // jsonwebtoken’s verify is already used; here we only decode (unsafe)
       const base64 = cleaned.split('.')[1];
       if (!base64) return null;
       const json = Buffer.from(base64, 'base64').toString('utf8');
@@ -167,7 +155,6 @@ export class JwtIdentityService {
   }
 
   private toUniqueClaimDict(obj: Record<string, unknown>): Readonly<Record<string, unknown>> {
-    // Flatten one level if needed (payload is already key/value)
     const dict: Record<string, unknown> = {};
     Object.keys(obj).forEach(k => {
       if (!(k in dict)) dict[k] = obj[k] as unknown;

@@ -6,14 +6,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtIdentityService } from './jwt.identity.service';
 import { IJwtIdentity } from './jwt.identity';
 
-/**
- * Base class for both strategies; enforces iss/aud/key with HS256.
- */
+// Shared base for user/service flavours
 abstract class BaseJwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    config: ConfigService,
-    private readonly kind: 'user' | 'service',
-  ) {
+  constructor(config: ConfigService) {
     const opts: StrategyOptions = {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -24,19 +19,14 @@ abstract class BaseJwtStrategy extends PassportStrategy(Strategy) {
     };
     super(opts);
   }
-
   abstract validate(payload: any): Promise<IJwtIdentity>;
 }
 
 @Injectable()
 export class JwtUserStrategy extends BaseJwtStrategy {
-  constructor(
-    config: ConfigService,
-    private readonly ids: JwtIdentityService,
-  ) {
-    super(config, 'user');
+  constructor(config: ConfigService, private readonly ids: JwtIdentityService) {
+    super(config);
   }
-
   async validate(payload: any) {
     const id = this.ids.getUserFromPayload(payload);
     if (!id) throw new Error('Invalid user token');
@@ -46,13 +36,9 @@ export class JwtUserStrategy extends BaseJwtStrategy {
 
 @Injectable()
 export class JwtServiceStrategy extends BaseJwtStrategy {
-  constructor(
-    config: ConfigService,
-    private readonly ids: JwtIdentityService,
-  ) {
-    super(config, 'service');
+  constructor(config: ConfigService, private readonly ids: JwtIdentityService) {
+    super(config);
   }
-
   async validate(payload: any) {
     const id = this.ids.getServiceFromPayload(payload);
     if (!id) throw new Error('Invalid service token');

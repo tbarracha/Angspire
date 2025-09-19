@@ -19,8 +19,7 @@ export class WsJwtGuard implements CanActivate {
     const identity = this.ids.getIdentityFromPayload(payload);
     if (!identity) throw new UnauthorizedException('Invalid JWT');
 
-    // Attach identity to socket for later retrieval
-    (client as any).identity = identity;
+    (client as any).identity = identity; // attach for handlers
     return true;
   }
 }
