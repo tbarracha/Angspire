@@ -1,7 +1,7 @@
 // src/modules/auth/auth.module.ts
 import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthenticationService } from './authentication.service';
 
 import {
@@ -14,6 +14,7 @@ import {
 @Global() // <-- make providers visible app-wide
 @Module({
   imports: [
+    ConfigModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({

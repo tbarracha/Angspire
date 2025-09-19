@@ -1,6 +1,6 @@
 // src/modules/auth/operations/auth.operations.ts
 import 'reflect-metadata';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Scope, Inject } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, MinLength, IsArray } from 'class-validator';
 
@@ -35,9 +35,16 @@ export class AuthResponseDto { @ApiProperty() accessToken!: string; @ApiProperty
 export class GetJwtIdentityRequest { @ApiPropertyOptional() @IsOptional() @IsString() token?: string; }
 
 /* -------------- Base op -------------- */
-abstract class AuthOperation<TReq, TRes> extends OperationBaseCore<TReq> implements IOperation<TReq, TRes> {
-  constructor(protected readonly auth: AuthenticationService) { super(); }
+abstract class AuthOperation<TReq, TRes>
+  extends OperationBaseCore<TReq>
+  implements IOperation<TReq, TRes> {
+
+  // Property injection avoids the constructor metadata problem on subclasses
+  @Inject(AuthenticationService)
+  protected readonly auth!: AuthenticationService;
+
   protected abstract handle(req: TReq): Promise<TRes>;
+
   async execute(req: TReq, _ctx: OperationContext): Promise<TRes> {
     await this._onBefore(req);
     const res = await this.handle(req);
@@ -49,7 +56,7 @@ abstract class AuthOperation<TReq, TRes> extends OperationBaseCore<TReq> impleme
 /* -------------- Ops -------------- */
 @Operation({ group: 'Auth Public', route: '/auth/login', method: 'POST' })
 @OperationDto({ request: LoginRequestDto, response: AuthResponseDto })
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class LoginOperation extends AuthOperation<LoginRequestDto, AuthResponseDto> {
   protected async handle(req: LoginRequestDto) {
     if (!this.auth) throw new Error('AuthenticationService not injected (check AuthModule imports/exports).');
@@ -59,7 +66,7 @@ export class LoginOperation extends AuthOperation<LoginRequestDto, AuthResponseD
 
 @Operation({ group: 'Auth Public', route: '/auth/register/user', method: 'POST' })
 @OperationDto({ request: RegisterUserRequestDto, response: AuthResponseDto })
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class RegisterUserOperation extends AuthOperation<RegisterUserRequestDto, AuthResponseDto> {
   protected async handle(req: RegisterUserRequestDto) {
     return this.auth.registerUserAsync(req.email, req.password, req.firstName, req.lastName, req.userName);
@@ -68,7 +75,7 @@ export class RegisterUserOperation extends AuthOperation<RegisterUserRequestDto,
 
 @Operation({ group: 'Auth Public', route: '/auth/register/service', method: 'POST' })
 @OperationDto({ request: RegisterServiceRequestDto, response: AuthResponseDto })
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class RegisterServiceOperation extends AuthOperation<RegisterServiceRequestDto, AuthResponseDto> {
   protected async handle(req: RegisterServiceRequestDto) {
     return this.auth.registerServiceAsync(req.serviceName, req.clientSecret, req.scopes);
@@ -78,7 +85,7 @@ export class RegisterServiceOperation extends AuthOperation<RegisterServiceReque
 @Operation({ group: 'Auth Public', route: '/auth/logout', method: 'POST' })
 @OperationAuthorize()
 @OperationDto({ request: LogoutRequestDto, response: Object })
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class LogoutOperation extends AuthOperation<LogoutRequestDto, Record<string, never>> {
   protected async handle(req: LogoutRequestDto) {
     await this.auth.logoutAsync(req.refreshToken);
@@ -89,7 +96,7 @@ export class LogoutOperation extends AuthOperation<LogoutRequestDto, Record<stri
 @Operation({ group: 'Auth Public', route: '/auth/refresh', method: 'POST' })
 @OperationAuthorize()
 @OperationDto({ request: RefreshTokenRequestDto, response: AuthResponseDto })
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class RefreshTokenOperation extends AuthOperation<RefreshTokenRequestDto, AuthResponseDto> {
   protected async handle(req: RefreshTokenRequestDto) {
     return this.auth.refreshTokenAsync(req.refreshToken);
@@ -99,7 +106,7 @@ export class RefreshTokenOperation extends AuthOperation<RefreshTokenRequestDto,
 @Operation({ group: 'Auth Public', route: '/auth/get/jwtidentity', method: 'POST' })
 @OperationAuthorize()
 @OperationDto({ request: GetJwtIdentityRequest, response: JwtUserIdentity }) // doc a single shape
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class GetJwtIdentityByTokenOperation extends AuthOperation<GetJwtIdentityRequest, IJwtIdentity | null> {
   protected async handle(req: GetJwtIdentityRequest) {
     let token = (req?.token ?? '').trim();

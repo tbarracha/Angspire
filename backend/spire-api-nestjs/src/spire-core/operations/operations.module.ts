@@ -204,7 +204,7 @@ export class OperationsController {
     private readonly reg: OperationRegistry,
     private readonly aborts: StreamAbortRegistry,
     private readonly moduleRef: ModuleRef,
-  ) {}
+  ) { }
 
   @Post('streams/cancel')
   async cancel(@Res() res: Response, @Body() body: { requestId?: string }) {
@@ -257,7 +257,7 @@ export class OperationsController {
     const ctx: OperationContext = { userId: auth.userId ?? null, requestId };
 
     try {
-      // Resolve operation in a per-request DI context so REQUEST-scoped deps inject correctly
+      // 🔑 Resolve the operation ONLY inside the per-request DI context
       const contextId = ContextIdFactory.getByRequest(req);
       await this.moduleRef.registerRequestByContextId(req, contextId);
       const op = await this.moduleRef.resolve<any>(entry.ctor, contextId, { strict: false });
@@ -317,7 +317,7 @@ export class OperationsController {
       );
 
       if (process.env.OPS_LOG_BODY?.toLowerCase() === 'true') {
-        try { this.logger.debug(`request body: ${JSON.stringify(reqDto)}`); } catch { /* ignore */ }
+        try { this.logger.debug(`request body: ${JSON.stringify(reqDto)}`); } catch { }
       }
 
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
