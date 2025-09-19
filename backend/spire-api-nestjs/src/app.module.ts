@@ -8,8 +8,8 @@ const AutoOps = OperationsModule.registerAutoProviders();
 
 @Module({
   imports: [
+    // ✅ Only the dynamic module (merges OperationsModule + auto-discovered providers)
     AutoOps,
-    OperationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

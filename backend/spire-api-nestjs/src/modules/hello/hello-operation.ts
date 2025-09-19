@@ -1,13 +1,28 @@
+// hello.operation.ts
 import { Injectable } from '@nestjs/common';
-import { Operation, OperationGroup, OperationMethod, OperationRoute } from 'src/core/operations/operations.contracts';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Operation, OperationDto, OperationGroup, OperationMethod, OperationRoute } from 'src/core/operations/operations.contracts';
 
-export class HelloInputDto { firstName!: string; lastName?: string; }
-export class HelloOutputDto { message!: string; }
+export class HelloInputDto {
+  @ApiProperty()
+  firstName!: string;
+
+  @ApiPropertyOptional()
+  lastName?: string;
+}
+
+export class HelloOutputDto {
+  @ApiProperty()
+  message!: string;
+}
 
 @Operation({ group: 'Hello' })
 @OperationGroup('hello', true)
 @OperationRoute('hello/say')
 @OperationMethod('POST')
+
+// ✅ Make DTO mapping explicit (robust even if inference fails)
+@OperationDto({ request: HelloInputDto, response: HelloOutputDto })
 @Injectable()
 export class SayHelloOperation {
   async execute(input: HelloInputDto): Promise<HelloOutputDto> {

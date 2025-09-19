@@ -1,4 +1,15 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "compilerOptions": {
+    "outDir": "./dist",
+    "removeComments": true,
+    "sourceMap": true,
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "plugins": [
+      { "name": "@nestjs/swagger/plugin", "options": { "classValidatorShim": true, "introspectComments": true } }
+    ]
+  },
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
