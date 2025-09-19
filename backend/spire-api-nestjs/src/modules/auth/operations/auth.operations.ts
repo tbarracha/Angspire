@@ -46,9 +46,7 @@ abstract class AuthOperation<TReq, TRes>
   protected abstract handle(req: TReq): Promise<TRes>;
 
   async execute(req: TReq, _ctx: OperationContext): Promise<TRes> {
-    await this._onBefore(req);
     const res = await this.handle(req);
-    await this._onAfter(req);
     return res;
   }
 }
