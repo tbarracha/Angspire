@@ -1,4 +1,4 @@
-// src/modules/demo/stream.ticks.operation.ts
+// src/modules/demo-operations/stream.ticks.operation.ts
 import { Injectable } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
@@ -18,7 +18,7 @@ export class TickFrameDto {
   @ApiProperty({ example: 1731984123456 }) timestamp!: number;
 }
 
-@Operation({ group: 'Demo', stream: 'ndjson' })
+@Operation({ group: 'Demo Operations', stream: 'ndjson' })
 @OperationGroup('stream', true)
 @OperationRoute('stream/ticks')         // → POST /api/stream/ticks
 @OperationMethod('POST')

@@ -1,13 +1,13 @@
-// src/modules/demo/hello.operation.ts
+// src/modules/demo-operations/hello.operation.ts
 import { Injectable } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Operation, OperationDto, OperationGroup, OperationMethod, OperationRoute } from 'src/core/operations/operations.contracts';
 
 export class HelloInputDto {
-  @ApiProperty()
+  @ApiProperty({example: "Creative"})
   firstName!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({example: "Technologist"})
   lastName?: string;
 }
 
@@ -16,7 +16,7 @@ export class HelloOutputDto {
   message!: string;
 }
 
-@Operation({ group: 'Demo' })
+@Operation({ group: 'Demo Operations' })
 @OperationGroup('hello', true)
 @OperationRoute('hello')
 @OperationMethod('POST')

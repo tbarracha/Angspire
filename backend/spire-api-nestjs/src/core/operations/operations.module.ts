@@ -1,5 +1,5 @@
+// src/core/operations/operations.module.ts
 /* eslint-disable @typescript-eslint/no-var-requires */
-// operations.module.ts
 import 'reflect-metadata';
 import {
   All, Body, Controller, HttpStatus, Injectable, Logger, Module, OnModuleInit, Post, Query, Req, Res, Type,
@@ -19,6 +19,10 @@ import {
 } from './operations.contracts';
 
 import { SwaggerModule, DocumentBuilder, OpenAPIObject, getSchemaPath, ApiExcludeController } from '@nestjs/swagger';
+import { OperationsGateway } from './operations.ws.gateway';
+
+// ⬇️ NEW: import DI providers + helper from ops.di.ts
+import { OperationRegistry, StreamAbortRegistry, inferDtos } from './operations.di';
 
 // ==========================
 // Utils
@@ -36,117 +40,6 @@ function pickOperationClasses(mod: any): any[] {
 }
 function toPosix(p: string) { return p.replace(/\\/g, '/'); }
 function distRoot() { return path.resolve(__dirname, '..', '..'); }
-const isCtor = (v: any) => typeof v === 'function' && v.prototype && v.name;
-
-// Heuristics to avoid primitive/builtin types being treated as DTOs
-const NON_DTO_NAMES = new Set(['Object', 'Array', 'Promise', 'String', 'Number', 'Boolean', 'Map', 'Set', 'Date']);
-
-// ==========================
-// Registries
-// ==========================
-export interface HttpRegistration {
-  route: string;
-  method: HttpMethod;
-  policy: string;
-  auth?: string | boolean;
-  ctor: Type<any>;
-  isStream?: boolean;
-}
-
-@Injectable()
-export class StreamAbortRegistry {
-  private map = new Map<string, AbortController>();
-  tryRegister(key: string, c: AbortController) {
-    if (this.map.has(key)) return false;
-    this.map.set(key, c);
-    return true;
-  }
-  cancel(key: string) {
-    const c = this.map.get(key);
-    if (!c) return false;
-    c.abort();
-    this.map.delete(key);
-    return true;
-  }
-  remove(key: string) { this.map.delete(key); }
-}
-
-type InferredDtos = { request?: Type<any>; response?: Type<any> };
-
-function inferDtos(ctor: Type<any>): InferredDtos {
-  // 1) explicit decorator still takes precedence
-  const explicit = OpMeta.dtos(ctor);
-  const out: InferredDtos = { ...explicit };
-
-  // 2) CONVENTION: static RequestDto / ResponseDto / aliases
-  const statics = {
-    request:
-      (ctor as any).RequestDto ||
-      (ctor as any).InputDto ||
-      (ctor as any).Request ||
-      (ctor as any).ReqDto,
-    response:
-      (ctor as any).ResponseDto ||
-      (ctor as any).OutputDto ||
-      (ctor as any).Response ||
-      (ctor as any).ResDto ||
-      (ctor as any).ResultDto,
-  };
-  if (!out.request && isCtor(statics.request) && !NON_DTO_NAMES.has(statics.request.name)) {
-    out.request = statics.request;
-  }
-  if (!out.response && isCtor(statics.response) && !NON_DTO_NAMES.has(statics.response.name)) {
-    out.response = statics.response;
-  }
-
-  // 3) BEST-EFFORT: infer request via design:paramtypes for execute/executeStream
-  if (!out.request) {
-    try {
-      const proto = ctor.prototype;
-      const key = (proto.execute instanceof Function) ? 'execute'
-        : (proto.executeStream instanceof Function) ? 'executeStream'
-          : undefined;
-      if (key) {
-        const paramTypes: any[] = Reflect.getMetadata('design:paramtypes', proto, key) || [];
-        const candidate = paramTypes[0];
-        if (isCtor(candidate) && !NON_DTO_NAMES.has(candidate.name)) {
-          out.request = candidate;
-        }
-      }
-    } catch { /* ignore */ }
-  }
-
-  return out;
-}
-
-@Injectable()
-export class OperationRegistry {
-  private http: HttpRegistration[] = [];
-  private dtoSet = new Set<Type<any>>();
-
-  get all() { return this.http.slice(); }
-  get allDtos() { return Array.from(this.dtoSet); }
-
-  registerHttp(ctor: Type<any>, fallbackGroup: string) {
-    const group = OpMeta.group(ctor)?.name ?? fallbackGroup;
-    const name = ctor.name.replace(/Operation$/, '').toLowerCase();
-    const route = `/${OpMeta.route(ctor) ?? `${group.toLowerCase()}/${name}`}`.replace(/\/+/g, '/');
-    const method = OpMeta.method(ctor) ?? 'POST';
-    const policy = OpMeta.throttle(ctor) ?? 'ops-default';
-    const auth = OpMeta.auth(ctor);
-    const isStream = !!OpMeta.stream(ctor);
-
-    const key = `${method} ${route}`.toLowerCase();
-    if (this.http.some(e => `${e.method} ${e.route}`.toLowerCase() === key)) return;
-
-    // collect DTOs (decoratorless; supports static RequestDto/ResponseDto; falls back to design:paramtypes)
-    const dtos = inferDtos(ctor);
-    if (dtos.request) this.dtoSet.add(dtos.request);
-    if (dtos.response) this.dtoSet.add(dtos.response);
-
-    this.http.push({ route, method, policy, auth, ctor, isStream });
-  }
-}
 
 // ==========================
 // Controller (hidden from Swagger)
@@ -264,12 +157,8 @@ export class OperationMapper implements OnModuleInit {
     private readonly reg: OperationRegistry,
   ) { }
 
-  // Keep lifecycle hook, but make it call the idempotent method
-  onModuleInit() {
-    this.mapNow();
-  }
+  onModuleInit() { this.mapNow(); }
 
-  /** Idempotent mapper; safe to call before Swagger and from onModuleInit */
   mapNow() {
     const providers = this.discovery.getProviders();
     let candidates = 0;
@@ -369,7 +258,12 @@ function scanOperationFiles(logger = new Logger('AutoOps')): Type<any>[] {
     ]),
   ],
   controllers: [OperationsController],
-  providers: [OperationRegistry, StreamAbortRegistry, OperationMapper],
+  providers: [
+    OperationRegistry,         // ← from ops.di.ts
+    StreamAbortRegistry,       // ← from ops.di.ts
+    OperationMapper,
+    OperationsGateway,         // ← WebSocket gateway
+  ],
   exports: [OperationRegistry, OperationMapper],
 })
 export class OperationsModule {
@@ -381,7 +275,7 @@ export class OperationsModule {
 }
 
 // ==========================
-// Swagger setup (single entry)
+// Swagger setup (single entry) — unchanged logic except imports now use inferDtos from ops.di.ts
 // ==========================
 export type SwaggerSetupOpts = {
   includeOperations?: boolean;
@@ -402,7 +296,6 @@ function extendOpenApiWithOperations(
   doc.paths ||= {};
   doc.tags ||= [];
 
-  // Cancel endpoint (controller is excluded from auto-scan)
   const cancelPath = `${opsBase}/streams/cancel`.replace(/\/{2,}/g, '/');
   if (!doc.paths[cancelPath]?.post) {
     doc.paths[cancelPath] = doc.paths[cancelPath] || {};
@@ -425,7 +318,6 @@ function extendOpenApiWithOperations(
     } as any;
   }
 
-  // Concrete operation endpoints
   let added = 0;
   for (const e of reg.all) {
     const pathKey = `${opsBase}${e.route}`.replace(/\/{2,}/g, '/');
@@ -478,12 +370,7 @@ export class OperationsSwagger {
       .build();
 
     const reg = app.get(OperationRegistry, { strict: false });
-
-    // ✅ include all inferred DTOs so $ref targets exist
     const extraModels = includeOperations && reg ? reg.allDtos : [];
-    if (extraModels.length) {
-      logger.log(`Swagger extraModels: ${extraModels.map(m => m.name).join(', ')}`);
-    }
 
     const documentFactory = () => {
       const doc = SwaggerModule.createDocument(app, config, {
@@ -509,14 +396,11 @@ export class OperationsSwagger {
   }
 }
 
-// ==========================
-// Bootstrap helper (prime mapping before Swagger)
-// ==========================
 export class OperationsBootstrap {
   static async prime(app: INestApplication) {
     const mapper = app.get<OperationMapper>(OperationMapper, { strict: false });
     if (mapper && typeof mapper.mapNow === 'function') {
-      mapper.mapNow(); // idempotent; safe if onModuleInit already ran
+      mapper.mapNow();
     }
   }
 }

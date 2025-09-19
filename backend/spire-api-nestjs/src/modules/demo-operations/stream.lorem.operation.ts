@@ -1,4 +1,4 @@
-// src/modules/demo/stream.lorem.operation.ts
+// src/modules/demo-operations/stream.lorem.operation.ts
 import { Injectable } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
@@ -29,7 +29,7 @@ function makeLorem(n: number) {
   return s.join(' ').slice(0, n);
 }
 
-@Operation({ group: 'Demo', stream: 'ndjson' })
+@Operation({ group: 'Demo Operations', stream: 'ndjson' })
 @OperationGroup('stream', true)
 @OperationRoute('stream/lorem')         // → POST /api/stream/lorem
 @OperationMethod('POST')
