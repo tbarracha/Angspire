@@ -1,4 +1,4 @@
-// src/core/auth/jwt.identity.service.ts
+// src/core/jwt/jwt.identity.service.ts
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload, sign, verify, VerifyOptions } from 'jsonwebtoken';

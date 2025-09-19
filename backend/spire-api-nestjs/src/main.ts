@@ -7,9 +7,23 @@ import { RequestMethod } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable CORS
+  app.enableCors({
+    origin: [
+      'http://localhost:4200', // Angular dev server
+      'http://localhost:3000', // Nest itself (if you test cross-port)
+    ],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  });
+
   // Global API prefix
   app.setGlobalPrefix('api', {
-    exclude: [{ path: '/', method: RequestMethod.GET }, { path: '/health', method: RequestMethod.GET }],
+    exclude: [
+      { path: '/', method: RequestMethod.GET },
+      { path: '/health', method: RequestMethod.GET },
+    ],
   });
 
   // Ensure operations are discovered and registry (incl. inferred DTOs) is populated

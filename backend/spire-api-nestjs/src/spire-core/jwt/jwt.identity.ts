@@ -1,4 +1,4 @@
-// src/core/auth/jwt.identity.ts
+// src/core/jwt/jwt.identity.ts
 import { IHasIdT } from '../abstractions/interfaces';
 
 export interface IJwtIdentity extends IHasIdT<string> {

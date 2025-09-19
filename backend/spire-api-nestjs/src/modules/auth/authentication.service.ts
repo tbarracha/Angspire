@@ -6,7 +6,7 @@ import * as bcrypt from 'bcrypt';
 
 import { ConfigService } from '@nestjs/config';
 import { USER_STORE, REFRESH_TOKEN_STORE, IUserStore, IRefreshTokenStore, UserRecord } from './stores';
-import { JwtUserIdentity, JwtServiceIdentity, IJwtIdentity } from 'src/spire-core/auth/jwt.identity';
+import { JwtUserIdentity, JwtServiceIdentity, IJwtIdentity } from 'src/spire-core/jwt/jwt.identity';
 
 type Claims = Record<string, string>;
 

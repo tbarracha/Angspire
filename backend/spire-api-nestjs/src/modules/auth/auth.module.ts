@@ -1,23 +1,17 @@
 // src/modules/auth/auth.module.ts
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-
 import { AuthenticationService } from './authentication.service';
 
-// Operations
 import {
-  LoginOperation,
-  RegisterUserOperation,
-  RegisterServiceOperation,
-  LogoutOperation,
-  RefreshTokenOperation,
-  GetJwtIdentityByTokenOperation,
-} from './operations/auth.operations';
+  InMemoryUserStore,
+  InMemoryRefreshTokenStore,
+  USER_STORE,
+  REFRESH_TOKEN_STORE,
+} from './stores';
 
-// Pluggable stores (default in-memory)
-import { USER_STORE, InMemoryUserStore, REFRESH_TOKEN_STORE, InMemoryRefreshTokenStore } from './stores';
-
+@Global() // <-- make providers visible app-wide
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -34,18 +28,14 @@ import { USER_STORE, InMemoryUserStore, REFRESH_TOKEN_STORE, InMemoryRefreshToke
   ],
   providers: [
     AuthenticationService,
-    // swap these later for TypeORM-backed stores
     { provide: USER_STORE, useClass: InMemoryUserStore },
     { provide: REFRESH_TOKEN_STORE, useClass: InMemoryRefreshTokenStore },
-
-    // operations
-    LoginOperation,
-    RegisterUserOperation,
-    RegisterServiceOperation,
-    LogoutOperation,
-    RefreshTokenOperation,
-    GetJwtIdentityByTokenOperation,
   ],
-  exports: [AuthenticationService],
+  exports: [
+    AuthenticationService,
+    USER_STORE,
+    REFRESH_TOKEN_STORE,
+    JwtModule, // jwt verify/sign for any consumer
+  ],
 })
 export class AuthModule {}

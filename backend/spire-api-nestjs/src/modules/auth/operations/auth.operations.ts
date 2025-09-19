@@ -9,7 +9,7 @@ import {
   OperationBaseCore, IOperation, OperationContext
 } from 'src/spire-core/operations/operations.contracts';
 
-import { IJwtIdentity, JwtUserIdentity } from 'src/spire-core/auth/jwt.identity';
+import { IJwtIdentity, JwtUserIdentity } from 'src/spire-core/jwt/jwt.identity';
 import { AuthenticationService } from '../authentication.service';
 
 /* ---------------- DTOs ---------------- */
@@ -52,6 +52,7 @@ abstract class AuthOperation<TReq, TRes> extends OperationBaseCore<TReq> impleme
 @Injectable()
 export class LoginOperation extends AuthOperation<LoginRequestDto, AuthResponseDto> {
   protected async handle(req: LoginRequestDto) {
+    if (!this.auth) throw new Error('AuthenticationService not injected (check AuthModule imports/exports).');
     return this.auth.loginAsync(req.identifier, req.password);
   }
 }

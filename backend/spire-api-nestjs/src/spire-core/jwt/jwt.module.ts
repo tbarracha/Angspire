@@ -1,4 +1,4 @@
-// src/core/auth/jwt.module.ts
+// src/core/jwt/jwt.module.ts
 import { Global, Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';

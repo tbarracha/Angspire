@@ -1,4 +1,4 @@
-// src/core/auth/jwt.strategies.ts
+// src/core/jwt/jwt.strategies.ts
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt';

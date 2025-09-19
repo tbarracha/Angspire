@@ -4,7 +4,7 @@ import 'reflect-metadata';
 import {
   All, Body, Controller, HttpStatus, Injectable, Logger, Module, OnModuleInit, Post, Query, Req, Res, Type,
 } from '@nestjs/common';
-import { DiscoveryModule, DiscoveryService, ModuleRef, Reflector } from '@nestjs/core';
+import { DiscoveryModule, DiscoveryService, ModuleRef, Reflector, ContextIdFactory } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import type { INestApplication } from '@nestjs/common';
 import type { Request, Response } from 'express';
@@ -198,11 +198,13 @@ function wantsSse(req: Request) { return (req.headers['accept'] || '').toString(
 @ApiExcludeController()
 @Controller()
 export class OperationsController {
+  private readonly logger = new Logger('OperationsController');
+
   constructor(
     private readonly reg: OperationRegistry,
     private readonly aborts: StreamAbortRegistry,
     private readonly moduleRef: ModuleRef,
-  ) { }
+  ) {}
 
   @Post('streams/cancel')
   async cancel(@Res() res: Response, @Body() body: { requestId?: string }) {
@@ -224,21 +226,29 @@ export class OperationsController {
     const method = req.method.toUpperCase();
     const opPath = full.startsWith(OPS_BASE) ? (full.slice(OPS_BASE.length) || '/') : full;
 
+    if (process.env.OPS_DEBUG?.toLowerCase() === 'true') {
+      this.logger.debug(`→ ${method} ${full} (opPath=${opPath})`);
+    }
+
     const entry =
       this.reg.all.find(e => e.route.toLowerCase() === opPath.toLowerCase() && e.method === method) ||
       this.reg.all.find(e => e.route.toLowerCase() === opPath.toLowerCase());
 
-    if (!entry) { res.status(HttpStatus.NOT_FOUND).json({ message: `No operation for ${method} ${full}` }); return; }
+    if (!entry) {
+      this.logger.warn(`No operation for ${method} ${full}`);
+      res.status(HttpStatus.NOT_FOUND).json({ message: `No operation for ${method} ${full}` });
+      return;
+    }
 
     // Per-operation auth
     const policy = OpMeta.auth(entry.ctor);
     const authzHeader = req.header('authorization') || '';
     const auth = verifyTokenAndExtract(authzHeader, policy);
-    if (auth === null) { res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Unauthorized' }); return; }
-
-    let op: any = this.moduleRef.get(entry.ctor, { strict: false });
-    if (!op) op = await this.moduleRef.create(entry.ctor as any);
-    if (!op) { res.status(HttpStatus.NOT_FOUND).json({ message: `Operation provider not found for ${entry.ctor.name}` }); return; }
+    if (auth === null) {
+      this.logger.warn(`Unauthorized: ${method} ${full} <- ${entry.ctor.name}`);
+      res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Unauthorized' });
+      return;
+    }
 
     const reqDto = (method === 'GET' || method === 'DELETE') ? query : body;
     const requestId = (req.header('X-Client-Request-Id') || '').trim() || crypto.randomUUID();
@@ -247,6 +257,11 @@ export class OperationsController {
     const ctx: OperationContext = { userId: auth.userId ?? null, requestId };
 
     try {
+      // Resolve operation in a per-request DI context so REQUEST-scoped deps inject correctly
+      const contextId = ContextIdFactory.getByRequest(req);
+      await this.moduleRef.registerRequestByContextId(req, contextId);
+      const op = await this.moduleRef.resolve<any>(entry.ctor, contextId, { strict: false });
+
       if (op instanceof OperationBaseCore) {
         op.setUser(ctx.userId);
         op.setOperationContext(ctx);
@@ -259,18 +274,20 @@ export class OperationsController {
 
       const isStream = entry.isStream && (op.executeStream instanceof Function);
       if (!isStream) {
-        const result = await (op as IOperation<any, any>).execute(reqDto, ctx);
+        const result = await op.execute(reqDto, ctx);
         if (op instanceof OperationBaseCore) await op._onAfter(reqDto);
         res.status(HttpStatus.OK).json(result);
         return;
       }
 
+      // ---- Streaming (NDJSON / SSE) ----
       const format = OpMeta.stream(entry.ctor) || (wantsSse(req) ? 'sse' : 'ndjson');
       const ac = new AbortController();
       this.aborts.tryRegister(requestId, ac);
 
       try {
         const iter = (op as IStreamOperation<any, any>).executeStream(reqDto, ctx);
+
         if (format === 'sse') {
           res.setHeader('Content-Type', 'text/event-stream');
           res.setHeader('Cache-Control', 'no-cache');
@@ -294,7 +311,20 @@ export class OperationsController {
         if (op instanceof OperationBaseCore) await op._onAfter(reqDto);
       }
     } catch (err: any) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Internal error', error: err?.message ?? String(err) });
+      this.logger.error(
+        `Operation error: [${entry.method}] ${entry.route} <- ${entry.ctor.name}  rid=${requestId}`,
+        err?.stack ?? String(err),
+      );
+
+      if (process.env.OPS_LOG_BODY?.toLowerCase() === 'true') {
+        try { this.logger.debug(`request body: ${JSON.stringify(reqDto)}`); } catch { /* ignore */ }
+      }
+
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Internal error',
+        error: err?.message ?? String(err),
+        requestId,
+      });
     }
   }
 }
@@ -358,14 +388,23 @@ function scanOperationFiles(logger = new Logger('AutoOps')): Type<any>[] {
   const dist = distRoot();
   const distCwd = path.resolve(process.cwd(), 'dist');
   const roots = Array.from(new Set([dist, distCwd]));
+
+  // include both singular and plural variants:
+  //   *.operation.js, *-operation.js, *.operations.js, *-operations.js
   const patterns: string[] = [];
   for (const r0 of roots) {
     const r = toPosix(r0);
     patterns.push(
+      // root
       `${r}/**/*-operation.js`,
       `${r}/**/*.operation.js`,
+      `${r}/**/*-operations.js`,     // NEW
+      `${r}/**/*.operations.js`,     // NEW
+      // dist/src
       `${r}/src/**/*-operation.js`,
       `${r}/src/**/*.operation.js`,
+      `${r}/src/**/*-operations.js`, // NEW
+      `${r}/src/**/*.operations.js`, // NEW
     );
   }
 
@@ -393,8 +432,12 @@ function scanOperationFiles(logger = new Logger('AutoOps')): Type<any>[] {
       logger.debug(`   + op provider: ${c.name}`);
     }
   }
+
   if (classes.length === 0) {
-    logger.warn('No operations found. Ensure build artifacts exist and filenames end with ".operation.ts" or "-operation.ts".');
+    logger.warn(
+      'No operations found. Ensure build artifacts exist and filenames end with '
+      + '".operation.ts", "-operation.ts", ".operations.ts", or "-operations.ts" (compiled to .js).'
+    );
   }
   return classes;
 }

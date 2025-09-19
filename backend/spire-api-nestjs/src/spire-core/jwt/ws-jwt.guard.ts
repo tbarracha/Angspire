@@ -1,4 +1,4 @@
-// src/core/auth/ws-jwt.guard.ts
+// src/core/jwt/ws-jwt.guard.ts
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtIdentityService } from './jwt.identity.service';
 import { IJwtIdentity } from './jwt.identity';
