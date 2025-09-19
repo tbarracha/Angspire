@@ -21,6 +21,8 @@ import {
 
 import { SwaggerModule, DocumentBuilder, OpenAPIObject, getSchemaPath, ApiExcludeController } from '@nestjs/swagger';
 import { OperationsGateway } from './operations.ws.gateway';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 // ==========================
 // Utils
@@ -220,7 +222,7 @@ export class OperationsController {
     );
   }
 
-  @All('*path')
+    @All('*path')
   async handle(@Req() req: Request, @Res() res: Response, @Body() body: any, @Query() query: any) {
     const full = (req.originalUrl || '').split('?')[0] || `${req.baseUrl || ''}${req.path || ''}`;
     const method = req.method.toUpperCase();
@@ -240,24 +242,81 @@ export class OperationsController {
       return;
     }
 
-    // Per-operation auth
-    const policy = OpMeta.auth(entry.ctor);
+    // Build DTO early (we may read token from it as a fallback)
+    const reqDto = (method === 'GET' || method === 'DELETE') ? query : body;
+
+    // ----- AUTH GATE (uses JwtService if available; falls back to env verify) -----
+    const policy = OpMeta.auth(entry.ctor); // true | 'user' | 'service' | 'either' | false | undefined
+
+    // 1) Collect token: prefer Authorization header, then body/query 'token' for .NET-style calls.
     const authzHeader = req.header('authorization') || '';
-    const auth = verifyTokenAndExtract(authzHeader, policy);
-    if (auth === null) {
-      this.logger.warn(`Unauthorized: ${method} ${full} <- ${entry.ctor.name}`);
+    let token = authzHeader.trim().replace(/^Bearer\s+/i, '').replace(/^"|"$/g, '');
+    if (!token && typeof reqDto?.token === 'string') token = String(reqDto.token).trim();
+    if (!token && typeof query?.token === 'string') token = String(query.token).trim();
+
+    // 2) If the endpoint requires auth and we have no token at all -> 401
+    if ((policy === true || policy === 'user' || policy === 'service' || policy === 'either') && !token) {
+      this.logger.warn(`Unauthorized (no token): ${method} ${full} <- ${entry.ctor.name}`);
       res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Unauthorized' });
       return;
     }
 
-    const reqDto = (method === 'GET' || method === 'DELETE') ? query : body;
+    // 3) Verify token
+    let payload: any = null;
+    if (token) {
+      // Prefer JwtService (configured by AuthModule)
+      try {
+        const jwtSvc = this.moduleRef.get(JwtService, { strict: false });
+        const cfg = this.moduleRef.get(ConfigService, { strict: false }) as any;
+        const verifyOpts: any = {};
+        const iss = cfg?.get?.('JWT_ISSUER');
+        const aud = cfg?.get?.('JWT_AUDIENCE');
+        if (iss) verifyOpts.issuer = iss;
+        if (aud) verifyOpts.audience = aud;
+
+        payload = jwtSvc?.verify ? jwtSvc.verify(token, verifyOpts) : null;
+      } catch {
+        payload = null;
+      }
+
+      // Fallback to env-based jsonwebtoken.verify if JwtService path failed
+      if (!payload) {
+        const key = process.env.JWT_KEY || '';
+        const opts: VerifyOptions = { algorithms: ['HS256'] };
+        if (process.env.JWT_ISSUER) (opts as any).issuer = process.env.JWT_ISSUER;
+        if (process.env.JWT_AUDIENCE) (opts as any).audience = process.env.JWT_AUDIENCE;
+        try {
+          payload = verify(token, key, opts) as any;
+        } catch {
+          payload = null;
+        }
+      }
+    }
+
+    // 4) If auth is required, ensure we have a valid payload and it respects the policy
+    if (policy === true || policy === 'user' || policy === 'service' || policy === 'either') {
+      if (!payload) {
+        this.logger.warn(`Unauthorized (verification failed): ${method} ${full} <- ${entry.ctor.name}`);
+        res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Unauthorized' });
+        return;
+      }
+      const isService = !!payload['client_id'];
+      const wantUser = policy === true || policy === 'user';
+      const wantSvc = policy === 'service';
+      if ((wantUser && isService) || (wantSvc && !isService)) {
+        this.logger.warn(`Forbidden (policy mismatch): ${method} ${full} <- ${entry.ctor.name}`);
+        res.status(HttpStatus.FORBIDDEN).json({ message: 'Forbidden' });
+        return;
+      }
+    }
+
+    // Request ID + context
     const requestId = (req.header('X-Client-Request-Id') || '').trim() || crypto.randomUUID();
     res.setHeader('X-Request-Id', requestId);
-
-    const ctx: OperationContext = { userId: auth.userId ?? null, requestId };
+    const ctx: OperationContext = { userId: payload?.sub ? String(payload.sub) : null, requestId };
 
     try {
-      // 🔑 Resolve the operation ONLY inside the per-request DI context
+      // Per-request context for REQUEST-scoped deps
       const contextId = ContextIdFactory.getByRequest(req);
       await this.moduleRef.registerRequestByContextId(req, contextId);
       const op = await this.moduleRef.resolve<any>(entry.ctor, contextId, { strict: false });
@@ -287,7 +346,6 @@ export class OperationsController {
 
       try {
         const iter = (op as IStreamOperation<any, any>).executeStream(reqDto, ctx);
-
         if (format === 'sse') {
           res.setHeader('Content-Type', 'text/event-stream');
           res.setHeader('Cache-Control', 'no-cache');
@@ -315,11 +373,9 @@ export class OperationsController {
         `Operation error: [${entry.method}] ${entry.route} <- ${entry.ctor.name}  rid=${requestId}`,
         err?.stack ?? String(err),
       );
-
       if (process.env.OPS_LOG_BODY?.toLowerCase() === 'true') {
-        try { this.logger.debug(`request body: ${JSON.stringify(reqDto)}`); } catch { }
+        try { this.logger.debug(`request body: ${JSON.stringify(reqDto)}`); } catch {}
       }
-
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         message: 'Internal error',
         error: err?.message ?? String(err),
