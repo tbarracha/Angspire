@@ -1,4 +1,5 @@
-// Shared contracts – parity with your C# naming
+// src/spire-core/repositories/contracts.ts
+
 export type Filter<T> = Partial<Record<keyof T, any>>; // simple filter object
 export type OrderBy<T> = Partial<Record<keyof T, 'ASC' | 'DESC'>>;
 

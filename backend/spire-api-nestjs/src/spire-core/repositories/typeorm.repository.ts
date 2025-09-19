@@ -1,3 +1,5 @@
+// src/spire-core/repositories/typeorm.repository.ts
+
 import {
   Repository,
   DataSource,

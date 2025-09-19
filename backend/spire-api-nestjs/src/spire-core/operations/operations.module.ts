@@ -192,7 +192,7 @@ function verifyTokenAndExtract(
 // ==========================
 // Controller (hidden from Swagger)
 // ==========================
-const OPS_BASE = '/api';
+const OPS_BASE = process.env.OPS_BASE?.trim() || '/api';
 function wantsSse(req: Request) { return (req.headers['accept'] || '').toString().includes('text/event-stream'); }
 
 @ApiExcludeController()

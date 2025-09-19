@@ -1,3 +1,5 @@
+// src/spire-core/repositories/mongoose.repository.ts
+
 import { Model, FilterQuery, SortOrder } from 'mongoose';
 import {
     Filter,
