@@ -6,17 +6,16 @@ import {
   OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OptionItemListComponent } from '../../../lib/components/ui/option-list-components/option-item-list.component';
-import { OptionListConfig, OptionListGroup } from '../../../lib/components/ui/option-list-components/option-item.model';
-import { SmartOverlayService, SmartOverlayHandle } from '../../../lib/modules/overlay/smart-overlay.service';
-import { IconUserComponent, IconSettingsComponent, IconLogoutComponent } from '../../icons/components';
-import { AuthService } from '../../../modules/authentication/services/auth.service';
-import { ThemeSwitcherComponent } from '../../../lib/components/ui/theme-switcher-components/theme-switcher.component';
+import { IconAccountComponent, IconSettingsComponent, IconLogoutComponent } from '../../icons/components';
+import { SmartOverlayService, SmartOverlayHandle } from '../../../spire-lib/modules/overlay/smart-overlay.service';
+import { OptionItemListComponent } from '../../../spire-lib/ui-kit/option-list-components/option-item-list.component';
+import { OptionListConfig, OptionListGroup } from '../../../spire-lib/ui-kit/option-list-components/option-item.model';
+import { AuthService } from '../../../spire-lib/modules/authentication/services/auth.service';
 
 @Component({
   selector: 'app-user-profile-button',
   standalone: true,
-  imports: [CommonModule, IconUserComponent],
+  imports: [CommonModule, IconAccountComponent],
   template: `
     <button
       type="button"
@@ -63,9 +62,8 @@ export class UserProfileButtonComponent implements OnDestroy {
         bgClasses: 'rounded-lg m-1 group-hover:bg-secondary/25'
       },
       items: [
-        { iconComponent: IconUserComponent, label: 'Profile', onClick: () => this._route('profile') },
+        { iconComponent: IconAccountComponent, label: 'Profile', onClick: () => this._route('profile') },
         { iconComponent: IconSettingsComponent, label: 'Settings', onClick: () => this._route('settings') },
-        { component: ThemeSwitcherComponent },
         {
           iconComponent: IconLogoutComponent,
           label: 'Logout',

@@ -7,10 +7,10 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "theme": "node src/app/lib/scripts/theme-sync.js",
-    "generate-icons": "node src/app/lib/scripts/generate-ng-icons.js",
-    "insert-icons": "node src/app/lib/scripts/insert-svg-icons.js",
-    "update-icon-colors": "node src/app/lib/scripts/update-icon-colors.js"
+    "theme": "node src/app/spire-lib/scripts/theme-sync.js",
+    "generate-icons": "node src/app/spire-lib/scripts/generate-ng-icons.js",
+    "insert-icons": "node src/app/spire-lib/scripts/insert-svg-icons.js",
+    "update-icon-colors": "node src/app/spire-lib/scripts/update-icon-colors.js"
   },
   "private": true,
   "dependencies": {

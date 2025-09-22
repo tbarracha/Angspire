@@ -6,10 +6,10 @@ import {
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { SocialLoginButtonsComponent } from '../components/social-login-buttons.component';
-import { InputComponent } from '../../../lib/components/ui-primitives/input.component';
-import { ButtonComponent } from "../../../lib/components/ui-primitives/button.component";
-import { AuthService } from '../../../modules/authentication/services/auth.service';
-import { RegisterUserRequestDto } from '../../../modules/authentication/models/auth-models';
+import { ButtonComponent } from '../../../spire-lib/ui-kit/input-components/button.component';
+import { InputComponent } from '../../../spire-lib/ui-kit/input-components/input.component';
+import { RegisterUserRequestDto } from '../../../spire-lib/modules/authentication/models/auth-models';
+import { AuthService } from '../../../spire-lib/modules/authentication/services/auth.service';
 
 @Component({
   selector: 'app-register-page',

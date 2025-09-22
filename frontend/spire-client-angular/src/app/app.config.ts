@@ -3,7 +3,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
 import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
-import { AuthInterceptor } from './modules/authentication/services/auth.interceptor';
+import { AuthInterceptor } from './spire-lib/modules/authentication/services/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [

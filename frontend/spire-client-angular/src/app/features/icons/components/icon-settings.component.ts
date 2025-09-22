@@ -1,6 +1,6 @@
 // icon-settings.component.ts
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { IconComponent } from '../../../lib/components/ui/icon-component/icon.component';
+import { IconComponent } from '../../../spire-lib/ui-kit/icon-component/icon.component';
 import { Icons } from '../icons'; // adjust path if necessary
 
 @Component({

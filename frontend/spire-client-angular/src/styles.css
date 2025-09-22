@@ -3,56 +3,66 @@
 
 /* styles.css or component styles */
 
-/* Placeholder, caret, selection use CSS variables from the directive */
-[uiPrimitive]::placeholder { color: var(--ui-placeholder, inherit); opacity: 1; }
-[uiPrimitive] { caret-color: var(--ui-caret, auto); }
-[uiPrimitive]::selection { background: var(--ui-selection-bg, #b3d4fc); color: var(--ui-selection-text, #000); }
-
-/* Also cover inputs/textareas where placeholder pseudo differs across engines */
-input[uiPrimitive]::placeholder,
-textarea[uiPrimitive]::placeholder { color: var(--ui-placeholder, inherit); }
-
-/* Optional: default transitions for newly themed nodes */
-[uiPrimitive] { transition-property: color, background-color, border-color, outline-color, box-shadow; transition-duration: 150ms; transition-timing-function: ease; }
-
-
 :root {
   /* npm run theme update */
   /* Theme START */
   --dark: #18181B;
-  --light: #FAFAFA;
+  --light: #fafafa;
 
-  --background: #18181B;
-  --background-text: #fafafa;
+  --base-100: #fafafa;
+  --base-200: #e4e4e7;
+  --base-300: #a1a1aa;
+  --base-content: #18181B;
 
-  --foreground: #fafafa;
-  --foreground-text: #242325;
+  --primary: #fbbf24;
+  --primary-content: #713f12;
 
-  --primary: #d4d4d8;
-  --secondary: #a1a1aa;
-  --tertiary: #52545C;
-
-  --accent: #ef4444;
-  --support: #fb923c;
-  --neutral: #FCFCFC;
-
-  --placeholder: #d4d4d8;
-
-  --success: #10b981;
-  --success-contrast: #ecfdf5;
-
-  --warning: #F8D863;
-  --warning-contrast: #CB7A10;
-
-  --error: #ef4444;
-  --error-contrast: #fff;
+  --secondary: #fb923c;
+  --secondary-content: #78350f;
   
-  --info: #2563eb;
-  --info-contrast: #fff;
+  --accent: #38bdf8;
+  --accent-content: #0c4a6e;
+  
+  --neutral: #18181B;
+  --neutral-content: #a1a1aa;
 
-  --scrollbar-track: #f4f4f5;
-  --scrollbar-thumb: #c4c4c4;
+  --success: #34d399;
+  --success-content: #064e3b;
+
+  --warning: #fbbf24;
+  --warning-content: #78350f;
+
+  --error: #f87171;
+  --error-content: #7f1d1d;
+  
+  --info: #60a5fa;
+  --info-content: #1e3a8a;
+  
+  --logo: #38BDF8;
+  --logo-light: #fafafa;
+  --logo-dark: #0c4a6e;
+
+  --chat-message-user: #EFEFF1;
+  --chat-message-code: #f4f4f5;
+  --code-card: #f4f4f5;
+
+  --scrollbar-track: #fafafa;
+  --scrollbar-thumb: #e4e4e7;
+  --scrollbar-thumb-hover: #a1a1aa;
   /* Theme END */
+}
+
+/* ui-vars.css – consumed by Tailwind's arbitrary values */
+.ui-var {
+  /* Background / foreground / border / ring / shadow color via CSS vars */
+  background-color: var(--ui-bg, transparent);
+  color: var(--ui-fg, inherit);
+  border-color: var(--ui-border, transparent);
+  border-style: var(--ui-border-style, none);
+  border-width: var(--ui-border-w, 0);
+
+  /* Tailwind-compatible arbitrary values: */
+  /* rounded-[var(--ui-radius)] ring-[var(--ui-ring-w)] ring-[var(--ui-ring)] shadow-[var(--ui-shadow)] */
 }
 
 @theme {
@@ -61,36 +71,46 @@ textarea[uiPrimitive]::placeholder { color: var(--ui-placeholder, inherit); }
   --color-dark: var(--dark);
   --color-light: var(--light);
 
-  --color-background: var(--background);
-  --color-background-text: var(--background-text);
-
-  --color-foreground: var(--foreground);
-  --color-foreground-text: var(--foreground-text);
+  --color-base-100: var(--base-100);
+  --color-base-200: var(--base-200);
+  --color-base-300: var(--base-300);
+  --color-base-content: var(--base-content);
 
   --color-primary: var(--primary);
+  --color-primary-content: var(--primary-content);
+
   --color-secondary: var(--secondary);
-  --color-tertiary: var(--tertiary);
+  --color-secondary-content: var(--secondary-content);
 
   --color-accent: var(--accent);
-  --color-support: var(--support);
-  --color-neutral: var(--neutral);
+  --color-accent-content: var(--accent-content);
 
-  --color-placeholder: var(--placeholder);
+  --color-neutral: var(--neutral);
+  --color-neutral-content: var(--neutral-content);
 
   --color-success: var(--success);
-  --color-success-contrast: var(--success-contrast);
+  --color-success-content: var(--success-content);
 
   --color-warning: var(--warning);
-  --color-warning-contrast: var(--warning-contrast);
+  --color-warning-content: var(--warning-content);
 
   --color-error: var(--error);
-  --color-error-contrast: var(--error-contrast);
+  --color-error-content: var(--error-content);
 
   --color-info: var(--info);
-  --color-info-contrast: var(--info-contrast);
+  --color-info-content: var(--info-content);
+
+  --color-logo: var(--logo);
+  --color-logo-light: var(--logo-light);
+  --color-logo-dark: var(--logo-dark);
+
+  --color-chat-message-user: var(--chat-message-user);
+  --color-chat-message-code: var(--chat-message-code);
+  --color-code-card: var(--code-card);
 
   --color-scrollbar-track: var(--scrollbar-track);
   --color-scrollbar-thumb: var(--scrollbar-thumb);
+  --color-scrollbar-thumb-hover: var(--scrollbar-thumb-hover);
 /* Theme END */
 }
 

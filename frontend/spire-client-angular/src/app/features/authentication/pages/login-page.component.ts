@@ -2,11 +2,11 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { InputComponent } from '../../../lib/components/ui-primitives/input.component';
-import { ButtonComponent } from "../../../lib/components/ui-primitives/button.component";
 import { SocialLoginButtonsComponent } from '../components/social-login-buttons.component';
-import { AuthService } from '../../../modules/authentication/services/auth.service';
-import { LoginRequestDto } from '../../../modules/authentication/models/auth-models';
+import { ButtonComponent } from '../../../spire-lib/ui-kit/input-components/button.component';
+import { InputComponent } from '../../../spire-lib/ui-kit/input-components/input.component';
+import { LoginRequestDto } from '../../../spire-lib/modules/authentication/models/auth-models';
+import { AuthService } from '../../../spire-lib/modules/authentication/services/auth.service';
 
 @Component({
   selector: 'app-login-page',
@@ -47,29 +47,29 @@ import { LoginRequestDto } from '../../../modules/authentication/models/auth-mod
       <!-- Submit Button -->
       <div>
         <app-button
-          type="accent"
-          styleIdle="filled"
-          styleHover="outlined"
           htmlType="submit"
           [disabled]="loginForm.invalid"
-          class="w-full text-light"
+          [mainColor]="'accent'"
+          [contentColor]="'accent-content'"
+          variant="solid"
+          hoverStyle="outline"
+          class="w-full"
         >
           Login
         </app-button>
-
       </div>
 
       <!-- Switch -->
-      <p class="text-sm text-center text-secondary">
+      <p class="text-sm text-center text-base-300">
         Don’t have an account?
         <a [routerLink]="['/register']" class="text-accent hover:underline">Register</a>
       </p>
 
       <!-- Divider -->
-      <div class="flex items-center text-secondary">
-        <div class="flex-grow border-t border-secondary"></div>
+      <div class="flex items-center text-base-300">
+        <div class="flex-grow border-t border-base-300"></div>
         <span class="px-3 text-sm">or</span>
-        <div class="flex-grow border-t border-secondary"></div>
+        <div class="flex-grow border-t border-base-300"></div>
       </div>
 
       <!-- Social Buttons -->
