@@ -1,8 +1,7 @@
 # in the folder with docker-compose.yml
 # docker compose up -d
 
-# This sets the "bundle" (compose project) name.
-# You can also override it with:  docker compose -p myname up
+# Compose project/bundle name
 name: angspire-datastack
 
 networks:
@@ -19,7 +18,7 @@ services:
   # PostgreSQL (Auth) > angspire_auth
   # -------------------------
   angspire-auth:
-    image: postgres:16
+    image: postgres:16.4
     container_name: angspire-auth
     networks: [angspire-net]
     ports:
@@ -35,12 +34,13 @@ services:
       retries: 10
     volumes:
       - angspire_auth_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   # -------------------------
   # MongoDB (App Domain) > angspire_domain
   # -------------------------
   angspire-domain:
-    image: mongo:7
+    image: mongo:7.0
     container_name: angspire-domain
     networks: [angspire-net]
     ports:
@@ -54,12 +54,13 @@ services:
       retries: 10
     volumes:
       - angspire_domain_data:/data/db
+    restart: unless-stopped
 
   # -------------------------
   # MinIO (S3-compatible file storage)
   # -------------------------
   angspire-minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2024-09-22T00-00-00Z
     container_name: angspire-minio
     networks: [angspire-net]
     environment:
@@ -72,15 +73,15 @@ services:
     volumes:
       - angspire_minio_data:/data
     healthcheck:
-      # If curl isn't present in your image, swap this for wget or remove the healthcheck.
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
+    restart: unless-stopped
 
   # One-shot init to create the bucket `angspire-files`
   angspire-minio-init:
-    image: minio/mc:latest
+    image: minio/mc:RELEASE.2024-09-22T00-00-00Z
     container_name: angspire-minio-init
     networks: [angspire-net]
     depends_on:

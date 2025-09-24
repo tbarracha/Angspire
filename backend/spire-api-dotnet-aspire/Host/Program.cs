@@ -1,10 +1,12 @@
 ﻿// =============================================
-// File: Host/Program.cs
+// File: Host/Program.cs - Identity-aware
 // =============================================
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using App.Core.Files;
-using App.Shared.Seeder;
+using Seeding;
 using Aspire.ServiceDefaults;
 using Authentication;
 using Microsoft.AspNetCore.Http.Json;
@@ -24,6 +26,40 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ---- Identity from appsettings (ServiceIdentity) ----
+var serviceName = builder.Configuration["ServiceIdentity:ServiceName"] ??
+                  AppDomain.CurrentDomain.FriendlyName ?? "App";
+var serviceDesc = builder.Configuration["ServiceIdentity:Description"] ?? serviceName;
+string Slugify(string s)
+{
+    var lower = s.Trim().ToLowerInvariant();
+    var replaced = Regex.Replace(lower, @"[^a-z0-9]+", "-");
+    replaced = Regex.Replace(replaced, @"-+", "-").Trim('-');
+    return string.IsNullOrWhiteSpace(replaced) ? "app" : replaced;
+}
+string TrimCommonSuffix(string slug)
+{
+    var parts = slug.Split('-', StringSplitOptions.RemoveEmptyEntries).ToList();
+    if (parts.Count == 0) return slug;
+    var last = parts[^1];
+    var drop = new HashSet<string> { "api", "service", "app", "server", "backend", "web" };
+    if (drop.Contains(last) && parts.Count > 1) parts.RemoveAt(parts.Count - 1);
+    return string.Join('-', parts);
+}
+string Pascalize(string input)
+{
+    var cleaned = Regex.Replace(input, @"[^A-Za-z0-9]+", " ");
+    var ti = CultureInfo.InvariantCulture.TextInfo;
+    var words = cleaned.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                       .Select(w => ti.ToTitleCase(w.ToLowerInvariant()));
+    return string.Concat(words);
+}
+
+var slug = TrimCommonSuffix(Slugify(serviceName));   // e.g., "angspire"
+var pascalName = Pascalize(serviceName);                   // e.g., "Angspire"
+var mongoAlias = $"{slug}_domain";                         // e.g., "angspire_domain"
+var corsPolicy = $"{pascalName}FrontendDev";               // unique per service
+
 // Aspire defaults 
 builder.AddServiceDefaults();
 
@@ -38,14 +74,12 @@ AppDomain.CurrentDomain.UnhandledException += (s, e) =>
     CrashTelemetry.MarkFatal("AppDomain.UnhandledException", ex);
     CrashTelemetry.FlushToDisk(builder.Environment.ContentRootPath, Environment.ExitCode);
 };
-
 TaskScheduler.UnobservedTaskException += (s, e) =>
 {
     e.SetObserved();
     CrashTelemetry.MarkFatal("TaskScheduler.UnobservedTaskException", e.Exception);
     CrashTelemetry.FlushToDisk(builder.Environment.ContentRootPath, Environment.ExitCode);
 };
-
 // First-chance: capture loader errors without logging to console
 AppDomain.CurrentDomain.FirstChanceException += (s, e) =>
 {
@@ -53,14 +87,10 @@ AppDomain.CurrentDomain.FirstChanceException += (s, e) =>
     {
         CrashTelemetry.MarkFatal("FirstChance.ReflectionTypeLoadException", rtle);
         if (rtle.LoaderExceptions is { Length: > 0 })
-        {
-            foreach (var le in rtle.LoaderExceptions)
-                CrashTelemetry.MarkFatal("LoaderException", le);
-        }
+            foreach (var le in rtle.LoaderExceptions) CrashTelemetry.MarkFatal("LoaderException", le);
         CrashTelemetry.FlushToDisk(builder.Environment.ContentRootPath);
     }
 };
-
 // Signals/unload/process-exit -> persist last state
 Console.CancelKeyPress += (s, e) =>
 {
@@ -89,8 +119,8 @@ builder.Services.Configure<HostOptions>(o =>
 // --------------------------------------------------------------------
 builder.Services.AddMemoryCache();
 
-// ---- App services (unchanged) ----
-builder.Services.AddOpenApi("Genspire API", "Genspire Monolithic API", "v1");
+// ---- App services (identity-driven) ----
+builder.Services.AddOpenApi(serviceName, serviceDesc, "v1");
 builder.Services.AddSingleton<IJwtIdentityService, JwtIdentityService>();
 builder.Services.Configure<JsonOptions>(options =>
 {
@@ -110,7 +140,8 @@ builder.Services.AddMongoDb(
     builder.Configuration,
     opts =>
     {
-        opts.DatabaseAlias = "genspire_domain";
+        // Use identity-derived default alias; ModuleDatabaseProvider already maps rich aliases
+        opts.DatabaseAlias = mongoAlias;
     });
 
 builder.Services.AddDomainEventDispatcher();
@@ -127,7 +158,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FrontendDev", policy =>
+    options.AddPolicy(corsPolicy, policy =>
         policy
             .WithOrigins("http://localhost:4200", "https://localhost:4200")
             .AllowAnyHeader()
@@ -151,7 +182,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseHttpsRedirection();
-app.UseCors("FrontendDev");
+app.UseCors(corsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -160,7 +191,8 @@ app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSecond
 // RateLimiter must be in the middleware pipeline (after Build, before endpoints)
 app.UseRateLimiter();
 
-app.UseOpenApi(endpointName: "Genspire API");
+// OpenAPI endpoint name uses the configured service identity
+app.UseOpenApi(endpointName: serviceName);
 
 app.MapOperationsEndpoints(log: true, mapHub: true);
 app.MapControllers();
@@ -171,8 +203,6 @@ catch (Exception ex)
 {
     CrashTelemetry.MarkFatal("Seeder", ex);
     CrashTelemetry.FlushToDisk(builder.Environment.ContentRootPath);
-    // Optionally: rethrow if you want startup to fail-fast
-    // throw;
 }
 
 // Minimal endpoint to fetch last-exit file (dev-only)

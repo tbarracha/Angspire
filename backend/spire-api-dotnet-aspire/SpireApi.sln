@@ -24,6 +24,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infra", "Infra", "{02EA681E
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Seeding", "Seeder\Seeding.csproj", "{19794273-E2A8-4A4A-859D-5B0667B08AAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity", "Identity\Identity.csproj", "{CB366661-3E93-4539-9F6F-C9E0EBE9C9B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +66,14 @@ Global
 		{143F6047-3E4E-4127-AA26-9C2B4EDFD651}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{143F6047-3E4E-4127-AA26-9C2B4EDFD651}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{143F6047-3E4E-4127-AA26-9C2B4EDFD651}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19794273-E2A8-4A4A-859D-5B0667B08AAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19794273-E2A8-4A4A-859D-5B0667B08AAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19794273-E2A8-4A4A-859D-5B0667B08AAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19794273-E2A8-4A4A-859D-5B0667B08AAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB366661-3E93-4539-9F6F-C9E0EBE9C9B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB366661-3E93-4539-9F6F-C9E0EBE9C9B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB366661-3E93-4539-9F6F-C9E0EBE9C9B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB366661-3E93-4539-9F6F-C9E0EBE9C9B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

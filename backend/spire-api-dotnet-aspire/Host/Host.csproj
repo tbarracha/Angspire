@@ -37,6 +37,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Authentication\Authentication.csproj" />
     <ProjectReference Include="..\Modules\App.csproj" />
+    <ProjectReference Include="..\Seeder\Seeding.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
     <ProjectReference Include="..\SpireCore.API\SpireCore.API.csproj" />
     <ProjectReference Include="..\SpireCore\SpireCore.csproj" />
