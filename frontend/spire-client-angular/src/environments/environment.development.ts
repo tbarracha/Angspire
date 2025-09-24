@@ -15,5 +15,5 @@ export const environment = {
   },
 
   enabledAuthGuard: true,
-  useLocalStorage: false,
+  useLocalStorage: true,
 };
